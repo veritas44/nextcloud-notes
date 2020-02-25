@@ -1,19 +1,15 @@
 package it.niedermann.owncloud.notes.android.fragment;
 
 import android.content.Context;
-import android.content.SharedPreferences;
-import android.graphics.Typeface;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
-import android.preference.PreferenceManager;
 import android.text.Editable;
 import android.text.Layout;
 import android.text.SpannableString;
 import android.text.TextWatcher;
 import android.util.Log;
-import android.util.TypedValue;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.View;
@@ -30,12 +26,32 @@ import androidx.core.view.ViewCompat;
 
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
+import java.util.concurrent.Executors;
+
 import butterknife.BindView;
 import butterknife.ButterKnife;
+import io.noties.markwon.AbstractMarkwonPlugin;
+import io.noties.markwon.Markwon;
+import io.noties.markwon.editor.MarkwonEditor;
+import io.noties.markwon.editor.MarkwonEditorTextWatcher;
+import io.noties.markwon.editor.handler.EmphasisEditHandler;
+import io.noties.markwon.editor.handler.StrongEmphasisEditHandler;
+import io.noties.markwon.ext.strikethrough.StrikethroughPlugin;
+import io.noties.markwon.ext.tables.TablePlugin;
+import io.noties.markwon.ext.tasklist.TaskListPlugin;
+import io.noties.markwon.html.HtmlPlugin;
+import io.noties.markwon.image.ImagesPlugin;
+import io.noties.markwon.linkify.LinkifyPlugin;
 import it.niedermann.owncloud.notes.R;
+import it.niedermann.owncloud.notes.editor.editor.BlockQuoteEditHandler;
+import it.niedermann.owncloud.notes.editor.editor.CodeEditHandler;
+import it.niedermann.owncloud.notes.editor.editor.HeadingEditHandler;
+import it.niedermann.owncloud.notes.editor.editor.LinkEditHandler;
+import it.niedermann.owncloud.notes.editor.editor.StrikethroughEditHandler;
 import it.niedermann.owncloud.notes.model.CloudNote;
 import it.niedermann.owncloud.notes.model.ISyncCallback;
 import it.niedermann.owncloud.notes.util.DisplayUtils;
+import it.niedermann.owncloud.notes.util.NoteLinksUtils;
 import it.niedermann.owncloud.notes.util.NotesTextWatcher;
 import it.niedermann.owncloud.notes.util.format.ContextBasedFormattingCallback;
 import it.niedermann.owncloud.notes.util.format.ContextBasedRangeFormattingCallback;
@@ -164,23 +180,50 @@ public class NoteEditFragment extends SearchableBaseNoteFragment {
             // workaround for issue yydcdut/RxMarkdown#41
             note.setContent(note.getContent().replace("\r\n", "\n"));
 
+            Markwon markwon = Markwon.builder(requireContext())
+                    .usePlugin(new AbstractMarkwonPlugin() {
+                        @NonNull
+                        @Override
+                        public String processMarkdown(@NonNull String markdown) {
+                            return NoteLinksUtils.replaceNoteLinksWithDummyUrls(markdown, db.getRemoteIds(note.getAccountId()));
+                        }
+                    })
+                    .usePlugin(StrikethroughPlugin.create())
+                    .usePlugin(TablePlugin.create(requireContext()))
+                    .usePlugin(TaskListPlugin.create(requireContext()))
+                    .usePlugin(HtmlPlugin.create())
+                    .usePlugin(ImagesPlugin.create())
+                    .usePlugin(LinkifyPlugin.create())
+//                .usePlugin(SyntaxHighlightPlugin.create(requireContext()))
+                    .build();
+
+            final LinkEditHandler.OnClick onClick = (widget, link) -> markwon.configuration().linkResolver().resolve(widget, link);
+            final MarkwonEditor editor = MarkwonEditor.builder(markwon)
+                    .useEditHandler(new EmphasisEditHandler())
+                    .useEditHandler(new StrongEmphasisEditHandler())
+                    .useEditHandler(new StrikethroughEditHandler())
+                    .useEditHandler(new CodeEditHandler())
+                    .useEditHandler(new BlockQuoteEditHandler())
+                    .useEditHandler(new LinkEditHandler(onClick))
+                    .useEditHandler(new HeadingEditHandler(1))
+                    .build();
+
+            editContent.addTextChangedListener(MarkwonEditorTextWatcher.withPreRender(
+                    editor, Executors.newSingleThreadExecutor(), editContent));
+
+
             editContent.setText(note.getContent());
             editContent.setEnabled(true);
-
-//            MarkdownProcessor markdownProcessor = new MarkdownProcessor(getContext());
-//            markdownProcessor.config(MarkDownUtil.getMarkDownConfiguration(editContent.getContext()).build());
-//            markdownProcessor.factory(EditFactory.create());
-//            markdownProcessor.live(editContent);
 
             editContent.setCustomSelectionActionModeCallback(new ContextBasedRangeFormattingCallback(this.editContent));
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
                 editContent.setCustomInsertionActionModeCallback(new ContextBasedFormattingCallback(this.editContent));
             }
-            SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(getContext().getApplicationContext());
-            editContent.setTextSize(TypedValue.COMPLEX_UNIT_PX, getFontSizeFromPreferences(sp));
-            if (sp.getBoolean(getString(R.string.pref_key_font), false)) {
-                editContent.setTypeface(Typeface.MONOSPACE);
-            }
+//            SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(getContext().getApplicationContext());
+//            editContent.setTextSize(TypedValue.COMPLEX_UNIT_PX, getFontSizeFromPreferences(sp));
+//            if (sp.getBoolean(getString(R.string.pref_key_font), false)) {
+//                editContent.setTypeface(Typeface.MONOSPACE);
+//            }
         }
     }
 

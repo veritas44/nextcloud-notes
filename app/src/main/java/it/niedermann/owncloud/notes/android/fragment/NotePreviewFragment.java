@@ -6,7 +6,6 @@ import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.text.Layout;
 import android.text.SpannableString;
-import android.text.method.LinkMovementMethod;
 import android.util.TypedValue;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -30,6 +29,14 @@ import com.nextcloud.android.sso.model.SingleSignOnAccount;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
+import io.noties.markwon.AbstractMarkwonPlugin;
+import io.noties.markwon.Markwon;
+import io.noties.markwon.ext.strikethrough.StrikethroughPlugin;
+import io.noties.markwon.ext.tables.TablePlugin;
+import io.noties.markwon.ext.tasklist.TaskListPlugin;
+import io.noties.markwon.html.HtmlPlugin;
+import io.noties.markwon.image.ImagesPlugin;
+import io.noties.markwon.linkify.LinkifyPlugin;
 import it.niedermann.owncloud.notes.R;
 import it.niedermann.owncloud.notes.model.LoginStatus;
 import it.niedermann.owncloud.notes.persistence.NoteSQLiteOpenHelper;
@@ -40,8 +47,6 @@ import it.niedermann.owncloud.notes.util.SSOUtil;
 public class NotePreviewFragment extends SearchableBaseNoteFragment implements OnRefreshListener {
 
     private String changedText;
-
-//    private MarkdownProcessor markdownProcessor;
 
     @BindView(R.id.swiperefreshlayout)
     SwipeRefreshLayout swipeRefreshLayout;
@@ -106,6 +111,7 @@ public class NotePreviewFragment extends SearchableBaseNoteFragment implements O
     public void onActivityCreated(@Nullable Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
         ButterKnife.bind(this, requireView());
+//        MarkdownProcessor markdownProcessor;
 //        markdownProcessor = new MarkdownProcessor(requireContext());
 //        markdownProcessor.factory(TextFactory.create());
 //        markdownProcessor.config(
@@ -163,17 +169,36 @@ public class NotePreviewFragment extends SearchableBaseNoteFragment implements O
 //                            }
 //                        })
 //                        .build());
-        try {
-            CharSequence parsedMarkdown = /*markdownProcessor.parse(*/NoteLinksUtils.replaceNoteLinksWithDummyUrls(note.getContent(), db.getRemoteIds(note.getAccountId()))/*)*/;
-            noteContent.setText(parsedMarkdown);
-        } catch (StringIndexOutOfBoundsException e) {
-            // Workaround for RxMarkdown: https://github.com/stefan-niedermann/nextcloud-notes/issues/668
-            noteContent.setText(NoteLinksUtils.replaceNoteLinksWithDummyUrls(note.getContent(), db.getRemoteIds(note.getAccountId())));
-            Toast.makeText(noteContent.getContext(), R.string.could_not_load_preview_two_digit_numbered_list, Toast.LENGTH_LONG).show();
-            e.printStackTrace();
-        }
+
+        //                .usePlugin(SyntaxHighlightPlugin.create(requireContext()))
+        Markwon markwon = Markwon.builder(requireContext())
+                .usePlugin(new AbstractMarkwonPlugin() {
+                    @NonNull
+                    @Override
+                    public String processMarkdown(@NonNull String markdown) {
+                        return NoteLinksUtils.replaceNoteLinksWithDummyUrls(markdown, db.getRemoteIds(note.getAccountId()));
+                    }
+                })
+                .usePlugin(StrikethroughPlugin.create())
+                .usePlugin(TablePlugin.create(requireContext()))
+                .usePlugin(TaskListPlugin.create(requireContext()))
+                .usePlugin(HtmlPlugin.create())
+                .usePlugin(ImagesPlugin.create())
+                .usePlugin(LinkifyPlugin.create())
+//                .usePlugin(SyntaxHighlightPlugin.create(requireContext()))
+                .build();
+        markwon.setMarkdown(noteContent, note.getContent());
+//        try {
+//            CharSequence parsedMarkdown = /*markdownProcessor.parse(*/NoteLinksUtils.replaceNoteLinksWithDummyUrls(note.getContent(), db.getRemoteIds(note.getAccountId()))/*)*/;
+//            noteContent.setText(parsedMarkdown);
+//        } catch (StringIndexOutOfBoundsException e) {
+//            // Workaround for RxMarkdown: https://github.com/stefan-niedermann/nextcloud-notes/issues/668
+//            noteContent.setText(NoteLinksUtils.replaceNoteLinksWithDummyUrls(note.getContent(), db.getRemoteIds(note.getAccountId())));
+//            Toast.makeText(noteContent.getContext(), R.string.could_not_load_preview_two_digit_numbered_list, Toast.LENGTH_LONG).show();
+//            e.printStackTrace();
+//        }
         changedText = note.getContent();
-        noteContent.setMovementMethod(LinkMovementMethod.getInstance());
+//        noteContent.setMovementMethod(LinkMovementMethod.getInstance());
 
         db = NoteSQLiteOpenHelper.getInstance(getContext());
         swipeRefreshLayout.setOnRefreshListener(this);
