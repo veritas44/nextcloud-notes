@@ -1,9 +1,7 @@
 package it.niedermann.owncloud.notes.android.fragment;
 
-import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Typeface;
-import android.net.Uri;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.text.Layout;
@@ -24,23 +22,17 @@ import androidx.core.view.ViewCompat;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
-import com.yydcdut.markdown.MarkdownProcessor;
-import com.yydcdut.markdown.MarkdownTextView;
-import com.yydcdut.markdown.syntax.text.TextFactory;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import it.niedermann.owncloud.notes.R;
-import it.niedermann.owncloud.notes.android.activity.EditNoteActivity;
 import it.niedermann.owncloud.notes.model.ISyncCallback;
 import it.niedermann.owncloud.notes.persistence.NoteSQLiteOpenHelper;
 import it.niedermann.owncloud.notes.util.DisplayUtils;
-import it.niedermann.owncloud.notes.util.MarkDownUtil;
-import it.niedermann.owncloud.notes.util.NoteLinksUtils;
 
 public class NoteReadonlyFragment extends SearchableBaseNoteFragment {
 
-    private MarkdownProcessor markdownProcessor;
+//    private MarkdownProcessor markdownProcessor;
 
     @BindView(R.id.swiperefreshlayout)
     SwipeRefreshLayout swipeRefreshLayout;
@@ -55,7 +47,7 @@ public class NoteReadonlyFragment extends SearchableBaseNoteFragment {
     FloatingActionButton searchPrev;
 
     @BindView(R.id.single_note_content)
-    MarkdownTextView noteContent;
+    TextView noteContent;
 
     public static NoteReadonlyFragment newInstance(String content) {
         NoteReadonlyFragment f = new NoteReadonlyFragment();
@@ -76,8 +68,8 @@ public class NoteReadonlyFragment extends SearchableBaseNoteFragment {
         menu.findItem(R.id.menu_share).setVisible(false);
         menu.findItem(R.id.menu_move).setVisible(false);
         menu.findItem(R.id.menu_category).setVisible(false);
-        if(menu.findItem(MENU_ID_PIN) != null)
-        menu.findItem(MENU_ID_PIN).setVisible(false);
+        if (menu.findItem(MENU_ID_PIN) != null)
+            menu.findItem(MENU_ID_PIN).setVisible(false);
     }
 
     @Override
@@ -112,25 +104,25 @@ public class NoteReadonlyFragment extends SearchableBaseNoteFragment {
     public void onActivityCreated(@Nullable Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
         ButterKnife.bind(this, requireView());
-        markdownProcessor = new MarkdownProcessor(requireActivity());
-        markdownProcessor.factory(TextFactory.create());
-        markdownProcessor.config(
-                MarkDownUtil.getMarkDownConfiguration(noteContent.getContext())
-                        .setOnLinkClickCallback((view, link) -> {
-                            if (NoteLinksUtils.isNoteLink(link)) {
-                                long noteRemoteId = NoteLinksUtils.extractNoteRemoteId(link);
-                                long noteLocalId = db.getLocalIdByRemoteId(this.note.getAccountId(), noteRemoteId);
-                                Intent intent = new Intent(requireActivity().getApplicationContext(), EditNoteActivity.class);
-                                intent.putExtra(EditNoteActivity.PARAM_NOTE_ID, noteLocalId);
-                                startActivity(intent);
-                            } else {
-                                Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(link));
-                                startActivity(browserIntent);
-                            }
-                        })
-                        .build());
+//        markdownProcessor = new MarkdownProcessor(requireActivity());
+//        markdownProcessor.factory(TextFactory.create());
+//        markdownProcessor.config(
+//                MarkDownUtil.getMarkDownConfiguration(noteContent.getContext())
+//                        .setOnLinkClickCallback((view, link) -> {
+//                            if (NoteLinksUtils.isNoteLink(link)) {
+//                                long noteRemoteId = NoteLinksUtils.extractNoteRemoteId(link);
+//                                long noteLocalId = db.getLocalIdByRemoteId(this.note.getAccountId(), noteRemoteId);
+//                                Intent intent = new Intent(requireActivity().getApplicationContext(), EditNoteActivity.class);
+//                                intent.putExtra(EditNoteActivity.PARAM_NOTE_ID, noteLocalId);
+//                                startActivity(intent);
+//                            } else {
+//                                Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(link));
+//                                startActivity(browserIntent);
+//                            }
+//                        })
+//                        .build());
         try {
-            noteContent.setText(markdownProcessor.parse(note.getContent()));
+            noteContent.setText(/*markdownProcessor.parse(*/note.getContent()/*)*/);
             onResume();
         } catch (StringIndexOutOfBoundsException e) {
             // Workaround for RxMarkdown: https://github.com/stefan-niedermann/nextcloud-notes/issues/668
@@ -162,8 +154,8 @@ public class NoteReadonlyFragment extends SearchableBaseNoteFragment {
     @Override
     protected void colorWithText(String newText) {
         if (noteContent != null && ViewCompat.isAttachedToWindow(noteContent)) {
-            noteContent.setText(markdownProcessor.parse(DisplayUtils.searchAndColor(getContent(), new SpannableString
-                            (getContent()), newText, getResources().getColor(R.color.primary))),
+            noteContent.setText(/*markdownProcessor.parse(*/DisplayUtils.searchAndColor(getContent(), new SpannableString
+                            (getContent()), newText, getResources().getColor(R.color.primary)/*)*/),
                     TextView.BufferType.SPANNABLE);
         }
     }

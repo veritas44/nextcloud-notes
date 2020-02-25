@@ -20,6 +20,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.WindowManager;
 import android.view.inputmethod.InputMethodManager;
+import android.widget.EditText;
 import android.widget.ScrollView;
 import android.widget.TextView;
 
@@ -28,20 +29,16 @@ import androidx.annotation.Nullable;
 import androidx.core.view.ViewCompat;
 
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
-import com.yydcdut.markdown.MarkdownEditText;
-import com.yydcdut.markdown.MarkdownProcessor;
-import com.yydcdut.markdown.syntax.edit.EditFactory;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import it.niedermann.owncloud.notes.R;
 import it.niedermann.owncloud.notes.model.CloudNote;
 import it.niedermann.owncloud.notes.model.ISyncCallback;
+import it.niedermann.owncloud.notes.util.DisplayUtils;
+import it.niedermann.owncloud.notes.util.NotesTextWatcher;
 import it.niedermann.owncloud.notes.util.format.ContextBasedFormattingCallback;
 import it.niedermann.owncloud.notes.util.format.ContextBasedRangeFormattingCallback;
-import it.niedermann.owncloud.notes.util.DisplayUtils;
-import it.niedermann.owncloud.notes.util.MarkDownUtil;
-import it.niedermann.owncloud.notes.util.NotesTextWatcher;
 
 public class NoteEditFragment extends SearchableBaseNoteFragment {
 
@@ -60,7 +57,7 @@ public class NoteEditFragment extends SearchableBaseNoteFragment {
     ScrollView scrollView;
 
     @BindView(R.id.editContent)
-    MarkdownEditText editContent;
+    EditText editContent;
 
     private Handler handler;
     private boolean saveActive, unsavedEdit;
@@ -170,10 +167,10 @@ public class NoteEditFragment extends SearchableBaseNoteFragment {
             editContent.setText(note.getContent());
             editContent.setEnabled(true);
 
-            MarkdownProcessor markdownProcessor = new MarkdownProcessor(getContext());
-            markdownProcessor.config(MarkDownUtil.getMarkDownConfiguration(editContent.getContext()).build());
-            markdownProcessor.factory(EditFactory.create());
-            markdownProcessor.live(editContent);
+//            MarkdownProcessor markdownProcessor = new MarkdownProcessor(getContext());
+//            markdownProcessor.config(MarkDownUtil.getMarkDownConfiguration(editContent.getContext()).build());
+//            markdownProcessor.factory(EditFactory.create());
+//            markdownProcessor.live(editContent);
 
             editContent.setCustomSelectionActionModeCallback(new ContextBasedRangeFormattingCallback(this.editContent));
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
