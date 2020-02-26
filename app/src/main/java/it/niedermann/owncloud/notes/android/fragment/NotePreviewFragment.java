@@ -6,6 +6,8 @@ import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.text.Layout;
 import android.text.SpannableString;
+import android.text.TextPaint;
+import android.text.style.ClickableSpan;
 import android.util.TypedValue;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -31,9 +33,13 @@ import butterknife.BindView;
 import butterknife.ButterKnife;
 import io.noties.markwon.AbstractMarkwonPlugin;
 import io.noties.markwon.Markwon;
+import io.noties.markwon.MarkwonSpansFactory;
+import io.noties.markwon.SpanFactory;
 import io.noties.markwon.ext.strikethrough.StrikethroughPlugin;
 import io.noties.markwon.ext.tables.TablePlugin;
+import io.noties.markwon.ext.tasklist.TaskListItem;
 import io.noties.markwon.ext.tasklist.TaskListPlugin;
+import io.noties.markwon.ext.tasklist.TaskListSpan;
 import io.noties.markwon.html.HtmlPlugin;
 import io.noties.markwon.image.ImagesPlugin;
 import io.noties.markwon.linkify.LinkifyPlugin;
@@ -172,19 +178,38 @@ public class NotePreviewFragment extends SearchableBaseNoteFragment implements O
 
         //                .usePlugin(SyntaxHighlightPlugin.create(requireContext()))
         Markwon markwon = Markwon.builder(requireContext())
-                .usePlugin(new AbstractMarkwonPlugin() {
-                    @NonNull
-                    @Override
-                    public String processMarkdown(@NonNull String markdown) {
-                        return NoteLinksUtils.replaceNoteLinksWithDummyUrls(markdown, db.getRemoteIds(note.getAccountId()));
-                    }
-                })
                 .usePlugin(StrikethroughPlugin.create())
                 .usePlugin(TablePlugin.create(requireContext()))
                 .usePlugin(TaskListPlugin.create(requireContext()))
                 .usePlugin(HtmlPlugin.create())
                 .usePlugin(ImagesPlugin.create())
                 .usePlugin(LinkifyPlugin.create())
+                .usePlugin(new AbstractMarkwonPlugin() {
+                    @Override
+                    public void configureSpansFactory(@NonNull MarkwonSpansFactory.Builder builder) {
+                        SpanFactory origin = builder.getFactory(TaskListItem.class);
+
+                        builder.setFactory(TaskListItem.class, (configuration, props) -> {
+                            TaskListSpan span = (TaskListSpan) origin.getSpans(configuration, props);
+                            ClickableSpan c = new ClickableSpan() {
+                                @Override
+                                public void onClick(@NonNull View widget) {
+                                    span.setDone(!span.isDone());
+                                    widget.invalidate();
+                                }
+
+                                @Override
+                                public void updateDrawState(@NonNull TextPaint ds) {
+                                    //NoOp
+                                }
+                            };
+                            return new Object[]{
+                                    span,
+                                    c,
+                            };
+                        });
+                    }
+                })
 //                .usePlugin(SyntaxHighlightPlugin.create(requireContext()))
                 .build();
         markwon.setMarkdown(noteContent, note.getContent());

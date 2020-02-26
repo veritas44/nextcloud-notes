@@ -27,8 +27,7 @@
                 android:background="@color/bg_normal"
                 android:padding="16dp"
                 android:textAppearance="?android:attr/textAppearanceMedium"
-                android:textColor="@color/fg_default"
-                android:textIsSelectable="true" />
+                android:textColor="@color/fg_default" />
         </ScrollView>
     </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
 
