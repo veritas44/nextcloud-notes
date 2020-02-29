@@ -1,20 +1,29 @@
-package it.niedermann.owncloud.notes.editor.editor;
+package it.niedermann.owncloud.notes.editor.handler;
 
 import android.text.Editable;
 import android.text.Spanned;
-import android.text.style.StrikethroughSpan;
 
 import androidx.annotation.NonNull;
 
-import io.noties.markwon.editor.AbstractEditHandler;
+import io.noties.markwon.Markwon;
+import io.noties.markwon.core.MarkwonTheme;
+import io.noties.markwon.core.spans.CodeSpan;
+import io.noties.markwon.editor.EditHandler;
 import io.noties.markwon.editor.MarkwonEditorUtils;
 import io.noties.markwon.editor.PersistedSpans;
 
-public class StrikethroughEditHandler extends AbstractEditHandler<StrikethroughSpan> {
+public class CodeEditHandler implements EditHandler<CodeSpan> {
+
+    private MarkwonTheme theme;
+
+    @Override
+    public void init(@NonNull Markwon markwon) {
+        this.theme = markwon.configuration().theme();
+    }
 
     @Override
     public void configurePersistedSpans(@NonNull PersistedSpans.Builder builder) {
-        builder.persistSpan(StrikethroughSpan.class, StrikethroughSpan::new);
+        builder.persistSpan(CodeSpan.class, () -> new CodeSpan(theme));
     }
 
     @Override
@@ -22,14 +31,14 @@ public class StrikethroughEditHandler extends AbstractEditHandler<StrikethroughS
             @NonNull PersistedSpans persistedSpans,
             @NonNull Editable editable,
             @NonNull String input,
-            @NonNull StrikethroughSpan span,
+            @NonNull CodeSpan span,
             int spanStart,
             int spanTextLength) {
         final MarkwonEditorUtils.Match match =
-                MarkwonEditorUtils.findDelimited(input, spanStart, "~~");
+                MarkwonEditorUtils.findDelimited(input, spanStart, "`");
         if (match != null) {
             editable.setSpan(
-                    persistedSpans.get(StrikethroughSpan.class),
+                    persistedSpans.get(CodeSpan.class),
                     match.start(),
                     match.end(),
                     Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
@@ -39,7 +48,7 @@ public class StrikethroughEditHandler extends AbstractEditHandler<StrikethroughS
 
     @NonNull
     @Override
-    public Class<StrikethroughSpan> markdownSpanType() {
-        return StrikethroughSpan.class;
+    public Class<CodeSpan> markdownSpanType() {
+        return CodeSpan.class;
     }
 }

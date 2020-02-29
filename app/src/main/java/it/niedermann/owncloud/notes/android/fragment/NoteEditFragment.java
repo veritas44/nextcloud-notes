@@ -41,11 +41,11 @@ import io.noties.markwon.image.ImagesPlugin;
 import io.noties.markwon.linkify.LinkifyPlugin;
 import it.niedermann.owncloud.notes.R;
 import it.niedermann.owncloud.notes.databinding.FragmentNoteEditBinding;
-import it.niedermann.owncloud.notes.editor.editor.BlockQuoteEditHandler;
-import it.niedermann.owncloud.notes.editor.editor.CodeEditHandler;
-import it.niedermann.owncloud.notes.editor.editor.HeadingEditHandler;
-import it.niedermann.owncloud.notes.editor.editor.LinkEditHandler;
-import it.niedermann.owncloud.notes.editor.editor.StrikethroughEditHandler;
+import it.niedermann.owncloud.notes.editor.handler.BlockQuoteEditHandler;
+import it.niedermann.owncloud.notes.editor.handler.CodeEditHandler;
+import it.niedermann.owncloud.notes.editor.handler.HeadingEditHandler;
+import it.niedermann.owncloud.notes.editor.handler.LinkEditHandler;
+import it.niedermann.owncloud.notes.editor.handler.StrikethroughEditHandler;
 import it.niedermann.owncloud.notes.model.CloudNote;
 import it.niedermann.owncloud.notes.model.ISyncCallback;
 import it.niedermann.owncloud.notes.util.DisplayUtils;
@@ -183,7 +183,8 @@ public class NoteEditFragment extends SearchableBaseNoteFragment {
                     .usePlugin(HtmlPlugin.create())
                     .usePlugin(ImagesPlugin.create())
                     .usePlugin(LinkifyPlugin.create())
-//                .usePlugin(SyntaxHighlightPlugin.create(requireContext()))
+                    // TODO
+                    // .usePlugin(SyntaxHighlightPlugin.create(requireContext()))
                     .build();
 
             final LinkEditHandler.OnClick onClick = (widget, link) -> markwon.configuration().linkResolver().resolve(widget, link);

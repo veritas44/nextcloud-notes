@@ -1,4 +1,4 @@
-package it.niedermann.owncloud.notes.editor.editor;
+package it.niedermann.owncloud.notes.editor.handler;
 
 import android.text.Editable;
 import android.text.Spanned;

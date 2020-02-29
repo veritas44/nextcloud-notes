@@ -1,4 +1,4 @@
-package it.niedermann.owncloud.notes.editor.editor;
+package it.niedermann.owncloud.notes.editor.handler;
 
 import android.text.Editable;
 import android.text.Spanned;
@@ -7,18 +7,13 @@ import androidx.annotation.NonNull;
 
 import io.noties.markwon.Markwon;
 import io.noties.markwon.core.MarkwonTheme;
-import io.noties.markwon.core.spans.HeadingSpan;
+import io.noties.markwon.core.spans.BlockQuoteSpan;
 import io.noties.markwon.editor.EditHandler;
 import io.noties.markwon.editor.PersistedSpans;
 
-public class HeadingEditHandler implements EditHandler<HeadingSpan> {
+public class BlockQuoteEditHandler implements EditHandler<BlockQuoteSpan> {
 
     private MarkwonTheme theme;
-    private int size;
-
-    public HeadingEditHandler(int size) {
-        this.size = size;
-    }
 
     @Override
     public void init(@NonNull Markwon markwon) {
@@ -27,7 +22,7 @@ public class HeadingEditHandler implements EditHandler<HeadingSpan> {
 
     @Override
     public void configurePersistedSpans(@NonNull PersistedSpans.Builder builder) {
-        builder.persistSpan(HeadingSpan.class, () -> new HeadingSpan(theme, size));
+        builder.persistSpan(BlockQuoteSpan.class, () -> new BlockQuoteSpan(theme));
     }
 
     @Override
@@ -35,29 +30,21 @@ public class HeadingEditHandler implements EditHandler<HeadingSpan> {
             @NonNull PersistedSpans persistedSpans,
             @NonNull Editable editable,
             @NonNull String input,
-            @NonNull HeadingSpan span,
+            @NonNull BlockQuoteSpan span,
             int spanStart,
             int spanTextLength) {
-        String hashes = input.substring(spanStart, spanStart + spanTextLength + size + 1);
-        for (int i = 0; i < size; i++) {
-            if (hashes.charAt(i) != '#') {
-                return;
-            }
-        }
-        if (input.charAt(spanStart + size) != ' ') {
-            return;
-        }
+        // todo: here we should actually find a proper ending of a block quote...
         editable.setSpan(
-                persistedSpans.get(HeadingSpan.class),
+                persistedSpans.get(BlockQuoteSpan.class),
                 spanStart,
-                spanStart + spanTextLength + size + 1,
+                spanStart + spanTextLength,
                 Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
         );
     }
 
     @NonNull
     @Override
-    public Class<HeadingSpan> markdownSpanType() {
-        return HeadingSpan.class;
+    public Class<BlockQuoteSpan> markdownSpanType() {
+        return BlockQuoteSpan.class;
     }
 }

@@ -1,29 +1,20 @@
-package it.niedermann.owncloud.notes.editor.editor;
+package it.niedermann.owncloud.notes.editor.handler;
 
 import android.text.Editable;
 import android.text.Spanned;
+import android.text.style.StrikethroughSpan;
 
 import androidx.annotation.NonNull;
 
-import io.noties.markwon.Markwon;
-import io.noties.markwon.core.MarkwonTheme;
-import io.noties.markwon.core.spans.CodeSpan;
-import io.noties.markwon.editor.EditHandler;
+import io.noties.markwon.editor.AbstractEditHandler;
 import io.noties.markwon.editor.MarkwonEditorUtils;
 import io.noties.markwon.editor.PersistedSpans;
 
-public class CodeEditHandler implements EditHandler<CodeSpan> {
-
-    private MarkwonTheme theme;
-
-    @Override
-    public void init(@NonNull Markwon markwon) {
-        this.theme = markwon.configuration().theme();
-    }
+public class StrikethroughEditHandler extends AbstractEditHandler<StrikethroughSpan> {
 
     @Override
     public void configurePersistedSpans(@NonNull PersistedSpans.Builder builder) {
-        builder.persistSpan(CodeSpan.class, () -> new CodeSpan(theme));
+        builder.persistSpan(StrikethroughSpan.class, StrikethroughSpan::new);
     }
 
     @Override
@@ -31,14 +22,14 @@ public class CodeEditHandler implements EditHandler<CodeSpan> {
             @NonNull PersistedSpans persistedSpans,
             @NonNull Editable editable,
             @NonNull String input,
-            @NonNull CodeSpan span,
+            @NonNull StrikethroughSpan span,
             int spanStart,
             int spanTextLength) {
         final MarkwonEditorUtils.Match match =
-                MarkwonEditorUtils.findDelimited(input, spanStart, "`");
+                MarkwonEditorUtils.findDelimited(input, spanStart, "~~");
         if (match != null) {
             editable.setSpan(
-                    persistedSpans.get(CodeSpan.class),
+                    persistedSpans.get(StrikethroughSpan.class),
                     match.start(),
                     match.end(),
                     Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
@@ -48,7 +39,7 @@ public class CodeEditHandler implements EditHandler<CodeSpan> {
 
     @NonNull
     @Override
-    public Class<CodeSpan> markdownSpanType() {
-        return CodeSpan.class;
+    public Class<StrikethroughSpan> markdownSpanType() {
+        return StrikethroughSpan.class;
     }
 }

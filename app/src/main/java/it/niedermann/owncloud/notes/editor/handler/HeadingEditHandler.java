@@ -1,4 +1,4 @@
-package it.niedermann.owncloud.notes.editor.editor;
+package it.niedermann.owncloud.notes.editor.handler;
 
 import android.text.Editable;
 import android.text.Spanned;
@@ -7,13 +7,18 @@ import androidx.annotation.NonNull;
 
 import io.noties.markwon.Markwon;
 import io.noties.markwon.core.MarkwonTheme;
-import io.noties.markwon.core.spans.BlockQuoteSpan;
+import io.noties.markwon.core.spans.HeadingSpan;
 import io.noties.markwon.editor.EditHandler;
 import io.noties.markwon.editor.PersistedSpans;
 
-public class BlockQuoteEditHandler implements EditHandler<BlockQuoteSpan> {
+public class HeadingEditHandler implements EditHandler<HeadingSpan> {
 
     private MarkwonTheme theme;
+    private int size;
+
+    public HeadingEditHandler(int size) {
+        this.size = size;
+    }
 
     @Override
     public void init(@NonNull Markwon markwon) {
@@ -22,7 +27,7 @@ public class BlockQuoteEditHandler implements EditHandler<BlockQuoteSpan> {
 
     @Override
     public void configurePersistedSpans(@NonNull PersistedSpans.Builder builder) {
-        builder.persistSpan(BlockQuoteSpan.class, () -> new BlockQuoteSpan(theme));
+        builder.persistSpan(HeadingSpan.class, () -> new HeadingSpan(theme, size));
     }
 
     @Override
@@ -30,21 +35,29 @@ public class BlockQuoteEditHandler implements EditHandler<BlockQuoteSpan> {
             @NonNull PersistedSpans persistedSpans,
             @NonNull Editable editable,
             @NonNull String input,
-            @NonNull BlockQuoteSpan span,
+            @NonNull HeadingSpan span,
             int spanStart,
             int spanTextLength) {
-        // todo: here we should actually find a proper ending of a block quote...
+        String hashes = input.substring(spanStart, spanStart + spanTextLength + size + 1);
+        for (int i = 0; i < size; i++) {
+            if (hashes.charAt(i) != '#') {
+                return;
+            }
+        }
+        if (input.charAt(spanStart + size) != ' ') {
+            return;
+        }
         editable.setSpan(
-                persistedSpans.get(BlockQuoteSpan.class),
+                persistedSpans.get(HeadingSpan.class),
                 spanStart,
-                spanStart + spanTextLength,
+                spanStart + spanTextLength + size + 1,
                 Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
         );
     }
 
     @NonNull
     @Override
-    public Class<BlockQuoteSpan> markdownSpanType() {
-        return BlockQuoteSpan.class;
+    public Class<HeadingSpan> markdownSpanType() {
+        return HeadingSpan.class;
     }
 }
