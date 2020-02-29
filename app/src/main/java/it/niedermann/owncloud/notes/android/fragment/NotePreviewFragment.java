@@ -6,8 +6,12 @@ import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.text.Layout;
 import android.text.SpannableString;
+import android.text.Spanned;
 import android.text.TextPaint;
+import android.text.TextUtils;
+import android.text.method.LinkMovementMethod;
 import android.text.style.ClickableSpan;
+import android.util.Log;
 import android.util.TypedValue;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -48,9 +52,16 @@ import it.niedermann.owncloud.notes.util.DisplayUtils;
 import it.niedermann.owncloud.notes.util.NoteLinksUtils;
 import it.niedermann.owncloud.notes.util.SSOUtil;
 
+import static it.niedermann.owncloud.notes.util.MarkDownUtil.CHECKBOX_CHECKED_MINUS;
+import static it.niedermann.owncloud.notes.util.MarkDownUtil.CHECKBOX_CHECKED_STAR;
+import static it.niedermann.owncloud.notes.util.MarkDownUtil.CHECKBOX_UNCHECKED_MINUS;
+import static it.niedermann.owncloud.notes.util.MarkDownUtil.CHECKBOX_UNCHECKED_STAR;
+
 public class NotePreviewFragment extends SearchableBaseNoteFragment implements OnRefreshListener {
 
     private String changedText;
+
+    private Markwon markwon;
 
     private FragmentNotePreviewBinding binding;
 
@@ -129,12 +140,12 @@ public class NotePreviewFragment extends SearchableBaseNoteFragment implements O
 //                                         * When (un)checking a checkbox which is in the last line, every time it gets toggled, the last character of the line gets lost.
 //                                         * When (un)checking a checkbox, every markdown gets stripped in the given line argument
 //                                         */
-//                                        if (lines[lineNumber].startsWith(CHECKBOX_UNCHECKED_MINUS) || lines[lineNumber].startsWith(CHECKBOX_UNCHECKED_STAR)) {
-//                                            lines[lineNumber] = lines[lineNumber].replace(CHECKBOX_UNCHECKED_MINUS, CHECKBOX_CHECKED_MINUS);
-//                                            lines[lineNumber] = lines[lineNumber].replace(CHECKBOX_UNCHECKED_STAR, CHECKBOX_CHECKED_STAR);
+//                                        if (line.startsWith(CHECKBOX_UNCHECKED_MINUS) || line.startsWith(CHECKBOX_UNCHECKED_STAR)) {
+//                                            line = line.replace(CHECKBOX_UNCHECKED_MINUS, CHECKBOX_CHECKED_MINUS);
+//                                            line = line.replace(CHECKBOX_UNCHECKED_STAR, CHECKBOX_CHECKED_STAR);
 //                                        } else {
-//                                            lines[lineNumber] = lines[lineNumber].replace(CHECKBOX_CHECKED_MINUS, CHECKBOX_UNCHECKED_MINUS);
-//                                            lines[lineNumber] = lines[lineNumber].replace(CHECKBOX_CHECKED_STAR, CHECKBOX_UNCHECKED_STAR);
+//                                            line = line.replace(CHECKBOX_CHECKED_MINUS, CHECKBOX_UNCHECKED_MINUS);
+//                                            line = line.replace(CHECKBOX_CHECKED_STAR, CHECKBOX_UNCHECKED_STAR);
 //                                        }
 //
 //                                        changedText = TextUtils.join("\n", lines);
@@ -162,7 +173,7 @@ public class NotePreviewFragment extends SearchableBaseNoteFragment implements O
 //                        .build());
 
         //                .usePlugin(SyntaxHighlightPlugin.create(requireContext()))
-        Markwon markwon = Markwon.builder(requireContext())
+        markwon = Markwon.builder(requireContext())
                 .usePlugin(StrikethroughPlugin.create())
                 .usePlugin(TablePlugin.create(requireContext()))
                 .usePlugin(TaskListPlugin.create(requireContext()))
@@ -179,8 +190,63 @@ public class NotePreviewFragment extends SearchableBaseNoteFragment implements O
                             ClickableSpan c = new ClickableSpan() {
                                 @Override
                                 public void onClick(@NonNull View widget) {
+                                    Log.v("checkbox", "abcdef");
                                     span.setDone(!span.isDone());
                                     widget.invalidate();
+
+                                    // it must be a TextView
+                                    final TextView textView = (TextView) widget;
+                                    // it must be spanned
+                                    final Spanned spanned = (Spanned) textView.getText();
+
+                                    // actual text of the span (this can be used along with the  `span`)
+                                    final CharSequence task = spanned.subSequence(
+                                            spanned.getSpanStart(this),
+                                            spanned.getSpanEnd(this)
+                                    );
+
+                                    int lineNumber = 0;
+
+                                    CharSequence textBeforeTask = spanned.subSequence(0, spanned.getSpanStart(this));
+                                    for (int i = 0; i < textBeforeTask.length(); i++) {
+                                        if (textBeforeTask.charAt(i) == '\n')
+                                            lineNumber++;
+                                    }
+
+                                    // Work on the original content now, because the previous stuff is rendered and inline markdown might be removed at this point
+
+                                    String[] lines = TextUtils.split(note.getContent(), "\\r?\\n");
+                                    /*
+                                     * Workaround fory RxMarkdown-bug:
+                                     * When (un)checking a checkbox in a note which contains code-blocks, the "`"-characters get stripped out in the TextView and therefore the given lineNumber is wrong
+                                     * Find number of lines starting with ``` before lineNumber
+                                     */
+                                    for (int i = 0; i < lines.length; i++) {
+                                        if (lines[i].startsWith("```")) {
+                                            lineNumber++;
+                                        }
+                                        if (i == lineNumber) {
+                                            break;
+                                        }
+                                    }
+
+
+                                    /*
+                                     * Workaround for multiple RxMarkdown-bugs:
+                                     * When (un)checking a checkbox which is in the last line, every time it gets toggled, the last character of the line gets lost.
+                                     * When (un)checking a checkbox, every markdown gets stripped in the given line argument
+                                     */
+                                    if (lines[lineNumber].startsWith(CHECKBOX_UNCHECKED_MINUS) || lines[lineNumber].startsWith(CHECKBOX_UNCHECKED_STAR)) {
+                                        lines[lineNumber] = lines[lineNumber].replace(CHECKBOX_UNCHECKED_MINUS, CHECKBOX_CHECKED_MINUS);
+                                        lines[lineNumber] = lines[lineNumber].replace(CHECKBOX_UNCHECKED_STAR, CHECKBOX_CHECKED_STAR);
+                                    } else {
+                                        lines[lineNumber] = lines[lineNumber].replace(CHECKBOX_CHECKED_MINUS, CHECKBOX_UNCHECKED_MINUS);
+                                        lines[lineNumber] = lines[lineNumber].replace(CHECKBOX_CHECKED_STAR, CHECKBOX_UNCHECKED_STAR);
+                                    }
+
+                                    changedText = TextUtils.join("\n", lines);
+                                    markwon.setMarkdown(binding.singleNoteContent, changedText);
+                                    saveNote(null);
                                 }
 
                                 @Override
@@ -196,7 +262,9 @@ public class NotePreviewFragment extends SearchableBaseNoteFragment implements O
                     }
                 })
 //                .usePlugin(SyntaxHighlightPlugin.create(requireContext()))
-                .build();
+                .
+
+                        build();
         markwon.setMarkdown(binding.singleNoteContent, note.getContent());
 //        try {
 //            CharSequence parsedMarkdown = /*markdownProcessor.parse(*/NoteLinksUtils.replaceNoteLinksWithDummyUrls(note.getContent(), db.getRemoteIds(note.getAccountId()))/*)*/;
@@ -208,14 +276,20 @@ public class NotePreviewFragment extends SearchableBaseNoteFragment implements O
 //            e.printStackTrace();
 //        }
         changedText = note.getContent();
-//        binding.noteContent.setMovementMethod(LinkMovementMethod.getInstance());
+        binding.singleNoteContent.setMovementMethod(LinkMovementMethod.getInstance());
 
-        db = NotesDatabase.getInstance(requireContext());
+        db = NotesDatabase.getInstance(
+
+                requireContext());
         binding.swiperefreshlayout.setOnRefreshListener(this);
 
         SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(requireActivity().getApplicationContext());
-        binding.singleNoteContent.setTextSize(TypedValue.COMPLEX_UNIT_PX, getFontSizeFromPreferences(sp));
-        if (sp.getBoolean(getString(R.string.pref_key_font), false)) {
+        binding.singleNoteContent.setTextSize(TypedValue.COMPLEX_UNIT_PX,
+
+                getFontSizeFromPreferences(sp));
+        if (sp.getBoolean(
+
+                getString(R.string.pref_key_font), false)) {
             binding.singleNoteContent.setTypeface(Typeface.MONOSPACE);
         }
     }
