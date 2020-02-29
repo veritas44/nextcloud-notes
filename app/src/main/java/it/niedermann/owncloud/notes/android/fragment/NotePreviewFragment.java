@@ -41,7 +41,6 @@ import io.noties.markwon.html.HtmlPlugin;
 import io.noties.markwon.image.ImagesPlugin;
 import io.noties.markwon.linkify.LinkifyPlugin;
 import it.niedermann.owncloud.notes.R;
-import it.niedermann.owncloud.notes.android.activity.EditNoteActivity;
 import it.niedermann.owncloud.notes.databinding.FragmentNotePreviewBinding;
 import it.niedermann.owncloud.notes.model.LoginStatus;
 import it.niedermann.owncloud.notes.persistence.NotesDatabase;
@@ -52,8 +51,6 @@ import it.niedermann.owncloud.notes.util.SSOUtil;
 public class NotePreviewFragment extends SearchableBaseNoteFragment implements OnRefreshListener {
 
     private String changedText;
-
-    private MarkdownProcessor markdownProcessor;
 
     private FragmentNotePreviewBinding binding;
 
@@ -105,7 +102,6 @@ public class NotePreviewFragment extends SearchableBaseNoteFragment implements O
     @Override
     public void onActivityCreated(@Nullable Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
-        ButterKnife.bind(this, requireView());
 //        MarkdownProcessor markdownProcessor;
 //        markdownProcessor = new MarkdownProcessor(requireContext());
 //        markdownProcessor.factory(TextFactory.create());
@@ -201,7 +197,7 @@ public class NotePreviewFragment extends SearchableBaseNoteFragment implements O
                 })
 //                .usePlugin(SyntaxHighlightPlugin.create(requireContext()))
                 .build();
-        markwon.setMarkdown(binding.noteContent, note.getContent());
+        markwon.setMarkdown(binding.singleNoteContent, note.getContent());
 //        try {
 //            CharSequence parsedMarkdown = /*markdownProcessor.parse(*/NoteLinksUtils.replaceNoteLinksWithDummyUrls(note.getContent(), db.getRemoteIds(note.getAccountId()))/*)*/;
 //            binding.noteContent.setText(parsedMarkdown);

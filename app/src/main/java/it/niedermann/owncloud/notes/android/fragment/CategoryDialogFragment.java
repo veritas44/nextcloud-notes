@@ -61,7 +61,7 @@ public class CategoryDialogFragment extends AppCompatDialogFragment {
     @Override
     public void onAttach(@NonNull Context context) {
         super.onAttach(context);
-        if (requireArguments() != null && requireArguments().containsKey(PARAM_ACCOUNT_ID)) {
+        if (requireArguments().containsKey(PARAM_ACCOUNT_ID)) {
             accountId = requireArguments().getLong(PARAM_ACCOUNT_ID);
         } else {
             throw new IllegalArgumentException("Provide at least \"" + PARAM_ACCOUNT_ID + "\"");

@@ -16,7 +16,6 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.WindowManager;
 import android.view.inputmethod.InputMethodManager;
-import android.widget.EditText;
 import android.widget.ScrollView;
 import android.widget.TextView;
 
@@ -51,7 +50,6 @@ import it.niedermann.owncloud.notes.model.CloudNote;
 import it.niedermann.owncloud.notes.model.ISyncCallback;
 import it.niedermann.owncloud.notes.util.DisplayUtils;
 import it.niedermann.owncloud.notes.util.NoteLinksUtils;
-import it.niedermann.owncloud.notes.util.MarkDownUtil;
 import it.niedermann.owncloud.notes.util.NotesTextWatcher;
 import it.niedermann.owncloud.notes.util.format.ContextBasedFormattingCallback;
 import it.niedermann.owncloud.notes.util.format.ContextBasedRangeFormattingCallback;
@@ -200,13 +198,13 @@ public class NoteEditFragment extends SearchableBaseNoteFragment {
                     .build();
 
             binding.editContent.addTextChangedListener(MarkwonEditorTextWatcher.withPreRender(
-                    editor, Executors.newSingleThreadExecutor(), editContent));
+                    editor, Executors.newSingleThreadExecutor(), binding.editContent));
 
 
             binding.editContent.setText(note.getContent());
             binding.editContent.setEnabled(true);
 
-            binding.editContent.setCustomSelectionActionModeCallback(new ContextBasedRangeFormattingCallback(this.editContent));
+            binding.editContent.setCustomSelectionActionModeCallback(new ContextBasedRangeFormattingCallback(binding.editContent));
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
                 binding.editContent.setCustomInsertionActionModeCallback(new ContextBasedFormattingCallback(binding.editContent));
             }
@@ -215,7 +213,7 @@ public class NoteEditFragment extends SearchableBaseNoteFragment {
 //            if (sp.getBoolean(getString(R.string.pref_key_font), false)) {
 //                binding.editContent.setTypeface(Typeface.MONOSPACE);
 //            }
-//        }
+        }
     }
 
     @Override
