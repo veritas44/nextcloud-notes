@@ -13,7 +13,7 @@ import android.widget.RemoteViewsService;
 import it.niedermann.owncloud.notes.R;
 import it.niedermann.owncloud.notes.android.activity.EditNoteActivity;
 import it.niedermann.owncloud.notes.model.DBNote;
-import it.niedermann.owncloud.notes.persistence.NoteSQLiteOpenHelper;
+import it.niedermann.owncloud.notes.persistence.NotesDatabase;
 
 public class SingleNoteWidgetFactory implements RemoteViewsService.RemoteViewsFactory {
 
@@ -21,7 +21,7 @@ public class SingleNoteWidgetFactory implements RemoteViewsService.RemoteViewsFa
     private final Context context;
     private final int appWidgetId;
 
-    private NoteSQLiteOpenHelper db;
+    private NotesDatabase db;
     private DBNote note;
     private final SharedPreferences sp;
     private static Boolean darkTheme;
@@ -41,7 +41,7 @@ public class SingleNoteWidgetFactory implements RemoteViewsService.RemoteViewsFa
 
     @Override
     public void onCreate() {
-        db = NoteSQLiteOpenHelper.getInstance(context);
+        db = NotesDatabase.getInstance(context);
     }
 
 

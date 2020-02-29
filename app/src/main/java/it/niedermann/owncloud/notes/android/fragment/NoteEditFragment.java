@@ -28,8 +28,6 @@ import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
 import java.util.concurrent.Executors;
 
-import butterknife.BindView;
-import butterknife.ButterKnife;
 import io.noties.markwon.AbstractMarkwonPlugin;
 import io.noties.markwon.Markwon;
 import io.noties.markwon.editor.MarkwonEditor;
@@ -43,6 +41,7 @@ import io.noties.markwon.html.HtmlPlugin;
 import io.noties.markwon.image.ImagesPlugin;
 import io.noties.markwon.linkify.LinkifyPlugin;
 import it.niedermann.owncloud.notes.R;
+import it.niedermann.owncloud.notes.databinding.FragmentNoteEditBinding;
 import it.niedermann.owncloud.notes.editor.editor.BlockQuoteEditHandler;
 import it.niedermann.owncloud.notes.editor.editor.CodeEditHandler;
 import it.niedermann.owncloud.notes.editor.editor.HeadingEditHandler;
@@ -52,6 +51,7 @@ import it.niedermann.owncloud.notes.model.CloudNote;
 import it.niedermann.owncloud.notes.model.ISyncCallback;
 import it.niedermann.owncloud.notes.util.DisplayUtils;
 import it.niedermann.owncloud.notes.util.NoteLinksUtils;
+import it.niedermann.owncloud.notes.util.MarkDownUtil;
 import it.niedermann.owncloud.notes.util.NotesTextWatcher;
 import it.niedermann.owncloud.notes.util.format.ContextBasedFormattingCallback;
 import it.niedermann.owncloud.notes.util.format.ContextBasedRangeFormattingCallback;
@@ -63,17 +63,7 @@ public class NoteEditFragment extends SearchableBaseNoteFragment {
     private static final long DELAY = 2000; // Wait for this time after typing before saving
     private static final long DELAY_AFTER_SYNC = 5000; // Wait for this time after saving before checking for next save
 
-    @BindView(R.id.searchNext)
-    FloatingActionButton searchNext;
-
-    @BindView(R.id.searchPrev)
-    FloatingActionButton searchPrev;
-
-    @BindView(R.id.scrollView)
-    ScrollView scrollView;
-
-    @BindView(R.id.editContent)
-    EditText editContent;
+    private FragmentNoteEditBinding binding;
 
     private Handler handler;
     private boolean saveActive, unsavedEdit;
@@ -122,38 +112,37 @@ public class NoteEditFragment extends SearchableBaseNoteFragment {
 
     @Override
     public ScrollView getScrollView() {
-        return scrollView;
+        return binding.scrollView;
     }
 
     @Override
     protected Layout getLayout() {
-        editContent.onPreDraw();
-        return editContent.getLayout();
+        binding.editContent.onPreDraw();
+        return binding.editContent.getLayout();
     }
 
     @Override
     protected FloatingActionButton getSearchNextButton() {
-        return searchNext;
+        return binding.searchNext;
     }
 
     @Override
     protected FloatingActionButton getSearchPrevButton() {
-        return searchPrev;
+        return binding.searchPrev;
     }
 
     @Nullable
     @Override
-    public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, Bundle savedInstanceState) {
-        return inflater.inflate(R.layout.fragment_note_edit, container, false);
+    public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, Bundle savedInstanceState) {
+        binding = FragmentNoteEditBinding.inflate(inflater, container, false);
+        return binding.getRoot();
     }
 
     @Override
     public void onActivityCreated(@Nullable Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
 
-        ButterKnife.bind(this, requireView());
-
-        textWatcher = new NotesTextWatcher(editContent) {
+        textWatcher = new NotesTextWatcher(binding.editContent) {
             @Override
             public void afterTextChanged(final Editable s) {
                 super.afterTextChanged(s);
@@ -167,12 +156,12 @@ public class NoteEditFragment extends SearchableBaseNoteFragment {
 
         if (note != null) {
             if (note.getContent().isEmpty()) {
-                editContent.requestFocus();
+                binding.editContent.requestFocus();
 
-                getActivity().getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_VISIBLE);
+                requireActivity().getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_VISIBLE);
 
                 InputMethodManager imm = (InputMethodManager)
-                        getActivity().getSystemService(Context.INPUT_METHOD_SERVICE);
+                        requireActivity().getSystemService(Context.INPUT_METHOD_SERVICE);
                 imm.showSoftInput(getView(), InputMethodManager.SHOW_IMPLICIT);
 
             }
@@ -180,6 +169,8 @@ public class NoteEditFragment extends SearchableBaseNoteFragment {
             // workaround for issue yydcdut/RxMarkdown#41
             note.setContent(note.getContent().replace("\r\n", "\n"));
 
+            binding.editContent.setText(note.getContent());
+            binding.editContent.setEnabled(true);
             Markwon markwon = Markwon.builder(requireContext())
                     .usePlugin(new AbstractMarkwonPlugin() {
                         @NonNull
@@ -208,35 +199,35 @@ public class NoteEditFragment extends SearchableBaseNoteFragment {
                     .useEditHandler(new HeadingEditHandler(1))
                     .build();
 
-            editContent.addTextChangedListener(MarkwonEditorTextWatcher.withPreRender(
+            binding.editContent.addTextChangedListener(MarkwonEditorTextWatcher.withPreRender(
                     editor, Executors.newSingleThreadExecutor(), editContent));
 
 
-            editContent.setText(note.getContent());
-            editContent.setEnabled(true);
+            binding.editContent.setText(note.getContent());
+            binding.editContent.setEnabled(true);
 
-            editContent.setCustomSelectionActionModeCallback(new ContextBasedRangeFormattingCallback(this.editContent));
+            binding.editContent.setCustomSelectionActionModeCallback(new ContextBasedRangeFormattingCallback(this.editContent));
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                editContent.setCustomInsertionActionModeCallback(new ContextBasedFormattingCallback(this.editContent));
+                binding.editContent.setCustomInsertionActionModeCallback(new ContextBasedFormattingCallback(binding.editContent));
             }
-//            SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(getContext().getApplicationContext());
-//            editContent.setTextSize(TypedValue.COMPLEX_UNIT_PX, getFontSizeFromPreferences(sp));
+//            SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(requireContext().getApplicationContext());
+//            binding.editContent.setTextSize(TypedValue.COMPLEX_UNIT_PX, getFontSizeFromPreferences(sp));
 //            if (sp.getBoolean(getString(R.string.pref_key_font), false)) {
-//                editContent.setTypeface(Typeface.MONOSPACE);
+//                binding.editContent.setTypeface(Typeface.MONOSPACE);
 //            }
-        }
+//        }
     }
 
     @Override
     public void onResume() {
         super.onResume();
-        editContent.addTextChangedListener(textWatcher);
+        binding.editContent.addTextChangedListener(textWatcher);
     }
 
     @Override
     public void onPause() {
         super.onPause();
-        editContent.removeTextChangedListener(textWatcher);
+        binding.editContent.removeTextChangedListener(textWatcher);
         cancelTimers();
     }
 
@@ -251,7 +242,7 @@ public class NoteEditFragment extends SearchableBaseNoteFragment {
      */
     @Override
     protected String getContent() {
-        return editContent.getText().toString();
+        return binding.editContent.getText().toString();
     }
 
     @Override
@@ -291,8 +282,8 @@ public class NoteEditFragment extends SearchableBaseNoteFragment {
 
     @Override
     protected void colorWithText(String newText) {
-        if (editContent != null && ViewCompat.isAttachedToWindow(editContent)) {
-            editContent.setText(DisplayUtils.searchAndColor(getContent(), new SpannableString
+        if (binding != null && ViewCompat.isAttachedToWindow(binding.editContent)) {
+            binding.editContent.setText(DisplayUtils.searchAndColor(getContent(), new SpannableString
                             (getContent()), newText, getResources().getColor(R.color.primary)),
                     TextView.BufferType.SPANNABLE);
         }

@@ -20,7 +20,6 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.core.view.ViewCompat;
-import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout.OnRefreshListener;
 
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
@@ -29,8 +28,6 @@ import com.nextcloud.android.sso.exceptions.NoCurrentAccountSelectedException;
 import com.nextcloud.android.sso.helper.SingleAccountHelper;
 import com.nextcloud.android.sso.model.SingleSignOnAccount;
 
-import butterknife.BindView;
-import butterknife.ButterKnife;
 import io.noties.markwon.AbstractMarkwonPlugin;
 import io.noties.markwon.Markwon;
 import io.noties.markwon.MarkwonSpansFactory;
@@ -44,8 +41,10 @@ import io.noties.markwon.html.HtmlPlugin;
 import io.noties.markwon.image.ImagesPlugin;
 import io.noties.markwon.linkify.LinkifyPlugin;
 import it.niedermann.owncloud.notes.R;
+import it.niedermann.owncloud.notes.android.activity.EditNoteActivity;
+import it.niedermann.owncloud.notes.databinding.FragmentNotePreviewBinding;
 import it.niedermann.owncloud.notes.model.LoginStatus;
-import it.niedermann.owncloud.notes.persistence.NoteSQLiteOpenHelper;
+import it.niedermann.owncloud.notes.persistence.NotesDatabase;
 import it.niedermann.owncloud.notes.util.DisplayUtils;
 import it.niedermann.owncloud.notes.util.NoteLinksUtils;
 import it.niedermann.owncloud.notes.util.SSOUtil;
@@ -54,20 +53,9 @@ public class NotePreviewFragment extends SearchableBaseNoteFragment implements O
 
     private String changedText;
 
-    @BindView(R.id.swiperefreshlayout)
-    SwipeRefreshLayout swipeRefreshLayout;
+    private MarkdownProcessor markdownProcessor;
 
-    @BindView(R.id.scrollView)
-    ScrollView scrollView;
-
-    @BindView(R.id.searchNext)
-    FloatingActionButton searchNext;
-
-    @BindView(R.id.searchPrev)
-    FloatingActionButton searchPrev;
-
-    @BindView(R.id.single_note_content)
-    TextView noteContent;
+    private FragmentNotePreviewBinding binding;
 
     public static NotePreviewFragment newInstance(long accountId, long noteId) {
         NotePreviewFragment f = new NotePreviewFragment();
@@ -87,30 +75,31 @@ public class NotePreviewFragment extends SearchableBaseNoteFragment implements O
 
     @Override
     public ScrollView getScrollView() {
-        return scrollView;
+        return binding.scrollView;
     }
 
     @Override
     protected FloatingActionButton getSearchNextButton() {
-        return searchNext;
+        return binding.searchNext;
     }
 
     @Override
     protected FloatingActionButton getSearchPrevButton() {
-        return searchPrev;
+        return binding.searchPrev;
     }
 
     @Override
     protected Layout getLayout() {
-        noteContent.onPreDraw();
-        return noteContent.getLayout();
+        binding.singleNoteContent.onPreDraw();
+        return binding.singleNoteContent.getLayout();
     }
 
     @Nullable
     @Override
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup
             container, @Nullable Bundle savedInstanceState) {
-        return inflater.inflate(R.layout.fragment_note_preview, container, false);
+        binding = FragmentNotePreviewBinding.inflate(inflater, container, false);
+        return binding.getRoot();
     }
 
     @Override
@@ -212,33 +201,33 @@ public class NotePreviewFragment extends SearchableBaseNoteFragment implements O
                 })
 //                .usePlugin(SyntaxHighlightPlugin.create(requireContext()))
                 .build();
-        markwon.setMarkdown(noteContent, note.getContent());
+        markwon.setMarkdown(binding.noteContent, note.getContent());
 //        try {
 //            CharSequence parsedMarkdown = /*markdownProcessor.parse(*/NoteLinksUtils.replaceNoteLinksWithDummyUrls(note.getContent(), db.getRemoteIds(note.getAccountId()))/*)*/;
-//            noteContent.setText(parsedMarkdown);
+//            binding.noteContent.setText(parsedMarkdown);
 //        } catch (StringIndexOutOfBoundsException e) {
 //            // Workaround for RxMarkdown: https://github.com/stefan-niedermann/nextcloud-notes/issues/668
-//            noteContent.setText(NoteLinksUtils.replaceNoteLinksWithDummyUrls(note.getContent(), db.getRemoteIds(note.getAccountId())));
-//            Toast.makeText(noteContent.getContext(), R.string.could_not_load_preview_two_digit_numbered_list, Toast.LENGTH_LONG).show();
+//            binding.noteContent.setText(NoteLinksUtils.replaceNoteLinksWithDummyUrls(note.getContent(), db.getRemoteIds(note.getAccountId())));
+//            Toast.makeText(binding.noteContent.getContext(), R.string.could_not_load_preview_two_digit_numbered_list, Toast.LENGTH_LONG).show();
 //            e.printStackTrace();
 //        }
         changedText = note.getContent();
-//        noteContent.setMovementMethod(LinkMovementMethod.getInstance());
+//        binding.noteContent.setMovementMethod(LinkMovementMethod.getInstance());
 
-        db = NoteSQLiteOpenHelper.getInstance(getContext());
-        swipeRefreshLayout.setOnRefreshListener(this);
+        db = NotesDatabase.getInstance(requireContext());
+        binding.swiperefreshlayout.setOnRefreshListener(this);
 
         SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(requireActivity().getApplicationContext());
-        noteContent.setTextSize(TypedValue.COMPLEX_UNIT_PX, getFontSizeFromPreferences(sp));
+        binding.singleNoteContent.setTextSize(TypedValue.COMPLEX_UNIT_PX, getFontSizeFromPreferences(sp));
         if (sp.getBoolean(getString(R.string.pref_key_font), false)) {
-            noteContent.setTypeface(Typeface.MONOSPACE);
+            binding.singleNoteContent.setTypeface(Typeface.MONOSPACE);
         }
     }
 
     @Override
     protected void colorWithText(String newText) {
-        if (noteContent != null && ViewCompat.isAttachedToWindow(noteContent)) {
-            noteContent.setText(/*markdownProcessor.parse(*/DisplayUtils.searchAndColor(getContent(), new SpannableString
+        if (binding != null && ViewCompat.isAttachedToWindow(binding.singleNoteContent)) {
+            binding.singleNoteContent.setText(/*markdownProcessor.parse(*/DisplayUtils.searchAndColor(getContent(), new SpannableString
                             (getContent()), newText, getResources().getColor(R.color.primary)/*)*/),
                     TextView.BufferType.SPANNABLE);
         }
@@ -252,21 +241,21 @@ public class NotePreviewFragment extends SearchableBaseNoteFragment implements O
     @Override
     public void onRefresh() {
         if (db.getNoteServerSyncHelper().isSyncPossible() && SSOUtil.isConfigured(getContext())) {
-            swipeRefreshLayout.setRefreshing(true);
+            binding.swiperefreshlayout.setRefreshing(true);
             try {
-                SingleSignOnAccount ssoAccount = SingleAccountHelper.getCurrentSingleSignOnAccount(getContext());
+                SingleSignOnAccount ssoAccount = SingleAccountHelper.getCurrentSingleSignOnAccount(requireContext());
                 db.getNoteServerSyncHelper().addCallbackPull(ssoAccount, () -> {
                     note = db.getNote(note.getAccountId(), note.getId());
-                    noteContent.setText(/*markdownProcessor.parse(*/NoteLinksUtils.replaceNoteLinksWithDummyUrls(note.getContent(), db.getRemoteIds(note.getAccountId()))/*)*/);
-                    swipeRefreshLayout.setRefreshing(false);
+                    binding.singleNoteContent.setText(/*markdownProcessor.parse(*/NoteLinksUtils.replaceNoteLinksWithDummyUrls(note.getContent(), db.getRemoteIds(note.getAccountId()))/*)*/);
+                    binding.swiperefreshlayout.setRefreshing(false);
                 });
                 db.getNoteServerSyncHelper().scheduleSync(ssoAccount, false);
             } catch (NextcloudFilesAppAccountNotFoundException | NoCurrentAccountSelectedException e) {
                 e.printStackTrace();
             }
         } else {
-            swipeRefreshLayout.setRefreshing(false);
-            Toast.makeText(getContext(), getString(R.string.error_sync, getString(LoginStatus.NO_NETWORK.str)), Toast.LENGTH_LONG).show();
+            binding.swiperefreshlayout.setRefreshing(false);
+            Toast.makeText(requireContext(), getString(R.string.error_sync, getString(LoginStatus.NO_NETWORK.str)), Toast.LENGTH_LONG).show();
         }
     }
 }
