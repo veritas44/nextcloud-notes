@@ -195,7 +195,7 @@ public class NoteEditFragment extends SearchableBaseNoteFragment {
                     .useEditHandler(new CodeEditHandler())
                     .useEditHandler(new BlockQuoteEditHandler())
                     .useEditHandler(new LinkEditHandler(onClick))
-                    .useEditHandler(new HeadingEditHandler(1))
+                    .useEditHandler(new HeadingEditHandler())
                     .build();
 
             binding.editContent.addTextChangedListener(MarkwonEditorTextWatcher.withPreRender(
