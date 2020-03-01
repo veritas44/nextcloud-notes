@@ -35,6 +35,7 @@ import io.noties.markwon.image.ImagesPlugin;
 import io.noties.markwon.linkify.LinkifyPlugin;
 import it.niedermann.owncloud.notes.R;
 import it.niedermann.owncloud.notes.databinding.FragmentNotePreviewBinding;
+import it.niedermann.owncloud.notes.editor.plugins.InternalLinksPlugin;
 import it.niedermann.owncloud.notes.editor.plugins.ToggleableTaskListPlugin;
 import it.niedermann.owncloud.notes.model.LoginStatus;
 import it.niedermann.owncloud.notes.persistence.NotesDatabase;
@@ -110,29 +111,24 @@ public class NotePreviewFragment extends SearchableBaseNoteFragment implements O
                     markwon.setMarkdown(binding.singleNoteContent, changedText);
                     saveNote(null);
                 }))
+                // TODO Syntax Highlighting
+                // .usePlugin(SyntaxHighlightPlugin.create(requireContext())).
+                .usePlugin(new InternalLinksPlugin(db.getRemoteIds(note.getAccountId())))
+                // TODO Internal note links
+                // TODO Try to move this into InternalLinksPlugin
+                // .setOnLinkClickCallback((view, link) -> {
+                //     if (NoteLinksUtils.isNoteLink(link)) {
+                //         long noteRemoteId = NoteLinksUtils.extractNoteRemoteId(link);
+                //         long noteLocalId = db.getLocalIdByRemoteId(this.note.getAccountId(), noteRemoteId);
+                //         Intent intent = new Intent(requireActivity().getApplicationContext(), EditNoteActivity.class);
+                //         intent.putExtra(EditNoteActivity.PARAM_NOTE_ID, noteLocalId);
+                //         startActivity(intent);
+                //     } else {
+                //         Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(link));
+                //         startActivity(browserIntent);
+                //     }
+                // })
                 .build();
-        // TODO Syntax Highlighting
-        // .usePlugin(SyntaxHighlightPlugin.create(requireContext())).
-        // TODO Internal note links
-        // .setOnLinkClickCallback((view, link) -> {
-        //     if (NoteLinksUtils.isNoteLink(link)) {
-        //         long noteRemoteId = NoteLinksUtils.extractNoteRemoteId(link);
-        //         long noteLocalId = db.getLocalIdByRemoteId(this.note.getAccountId(), noteRemoteId);
-        //         Intent intent = new Intent(requireActivity().getApplicationContext(), EditNoteActivity.class);
-        //         intent.putExtra(EditNoteActivity.PARAM_NOTE_ID, noteLocalId);
-        //         startActivity(intent);
-        //     } else {
-        //         Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(link));
-        //         startActivity(browserIntent);
-        //     }
-        // })
-        // .usePlugin(new AbstractMarkwonPlugin() {
-        //     @NonNull
-        //     @Override
-        //     public String processMarkdown(@NonNull String markdown) {
-        //         return NoteLinksUtils.replaceNoteLinksWithDummyUrls(markdown, db.getRemoteIds(note.getAccountId()));
-        //     }
-        // })
         markwon.setMarkdown(binding.singleNoteContent, note.getContent());
         changedText = note.getContent();
         binding.singleNoteContent.setMovementMethod(LinkMovementMethod.getInstance());

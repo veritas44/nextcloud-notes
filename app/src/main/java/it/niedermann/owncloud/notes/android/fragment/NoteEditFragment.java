@@ -27,7 +27,6 @@ import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
 import java.util.concurrent.Executors;
 
-import io.noties.markwon.AbstractMarkwonPlugin;
 import io.noties.markwon.Markwon;
 import io.noties.markwon.editor.MarkwonEditor;
 import io.noties.markwon.editor.MarkwonEditorTextWatcher;
@@ -46,10 +45,10 @@ import it.niedermann.owncloud.notes.editor.handler.CodeEditHandler;
 import it.niedermann.owncloud.notes.editor.handler.HeadingEditHandler;
 import it.niedermann.owncloud.notes.editor.handler.LinkEditHandler;
 import it.niedermann.owncloud.notes.editor.handler.StrikethroughEditHandler;
+import it.niedermann.owncloud.notes.editor.plugins.InternalLinksPlugin;
 import it.niedermann.owncloud.notes.model.CloudNote;
 import it.niedermann.owncloud.notes.model.ISyncCallback;
 import it.niedermann.owncloud.notes.util.DisplayUtils;
-import it.niedermann.owncloud.notes.util.NoteLinksUtils;
 import it.niedermann.owncloud.notes.util.NotesTextWatcher;
 import it.niedermann.owncloud.notes.util.format.ContextBasedFormattingCallback;
 import it.niedermann.owncloud.notes.util.format.ContextBasedRangeFormattingCallback;
@@ -170,13 +169,7 @@ public class NoteEditFragment extends SearchableBaseNoteFragment {
             binding.editContent.setText(note.getContent());
             binding.editContent.setEnabled(true);
             Markwon markwon = Markwon.builder(requireContext())
-                    .usePlugin(new AbstractMarkwonPlugin() {
-                        @NonNull
-                        @Override
-                        public String processMarkdown(@NonNull String markdown) {
-                            return NoteLinksUtils.replaceNoteLinksWithDummyUrls(markdown, db.getRemoteIds(note.getAccountId()));
-                        }
-                    })
+                    .usePlugin(new InternalLinksPlugin(db.getRemoteIds(note.getAccountId())))
                     .usePlugin(StrikethroughPlugin.create())
                     .usePlugin(TablePlugin.create(requireContext()))
                     .usePlugin(TaskListPlugin.create(requireContext()))
