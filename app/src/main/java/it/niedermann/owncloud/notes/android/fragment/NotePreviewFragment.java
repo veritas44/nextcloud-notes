@@ -112,7 +112,7 @@ public class NotePreviewFragment extends SearchableBaseNoteFragment implements O
                     saveNote(null);
                 }))
                 // TODO Syntax Highlighting
-                // .usePlugin(SyntaxHighlightPlugin.create(requireContext())).
+                // .usePlugin(SyntaxHighlightPlugin.create(Prism4j.grammar(""), Prism4jThemeDefault.create()))
                 .usePlugin(new InternalLinksPlugin(db.getRemoteIds(note.getAccountId())))
                 // TODO Internal note links
                 // TODO Try to move this into InternalLinksPlugin

@@ -34,8 +34,11 @@ android {
 }
 
 dependencies {
-    implementation "com.github.nextcloud:Android-SingleSignOn:0.5.0-rc3"
+    implementation "com.github.nextcloud:Android-SingleSignOn:0.5.0-rc4"
     implementation 'com.github.stefan-niedermann:nextcloud-commons:0.0.2'
+
+    implementation "io.noties:prism4j:2.0.0"
+    annotationProcessor 'io.noties:prism4j-bundler:2.0.0'
 
     implementation 'io.noties.markwon:core:4.2.1'
     implementation 'io.noties.markwon:editor:4.2.1'
