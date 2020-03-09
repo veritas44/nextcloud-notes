@@ -36,10 +36,11 @@ public class NoteListWidgetConfiguration extends AppCompatActivity {
     private int appWidgetId = AppWidgetManager.INVALID_APPWIDGET_ID;
 
 
-    LocalAccount localAccount = null;
+    private LocalAccount localAccount = null;
 
     private NavigationAdapter adapterCategories;
-    private NavigationAdapter.NavigationItem itemRecent, itemFavorites;
+    private NavigationAdapter.NavigationItem itemRecent;
+    private NavigationAdapter.NavigationItem itemFavorites;
     private NotesDatabase db = null;
 
     @Override
@@ -100,7 +101,7 @@ public class NoteListWidgetConfiguration extends AppCompatActivity {
                 }
 
                 sp.putLong(NoteListWidget.ACCOUNT_ID_KEY + appWidgetId, localAccount.getId());
-                sp.putBoolean(NoteListWidget.DARK_THEME_KEY + appWidgetId, Notes.getAppTheme(getApplicationContext()));
+                sp.putString(NoteListWidget.DARK_THEME_KEY + appWidgetId, Notes.getAppTheme(getApplicationContext()).name());
                 sp.apply();
 
                 Intent updateIntent = new Intent(   AppWidgetManager.ACTION_APPWIDGET_UPDATE, null,
@@ -145,7 +146,9 @@ public class NoteListWidgetConfiguration extends AppCompatActivity {
             }
 
             Map<String, Integer> favorites = db.getFavoritesCount(localAccount.getId());
+            //noinspection ConstantConditions
             int numFavorites = favorites.containsKey("1") ? favorites.get("1") : 0;
+            //noinspection ConstantConditions
             int numNonFavorites = favorites.containsKey("0") ? favorites.get("0") : 0;
             itemFavorites.count = numFavorites;
             itemRecent.count = numFavorites + numNonFavorites;

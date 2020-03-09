@@ -25,8 +25,8 @@ import it.niedermann.owncloud.notes.android.activity.NotesListViewActivity;
 import it.niedermann.owncloud.notes.android.fragment.AccountChooserDialogFragment;
 import it.niedermann.owncloud.notes.model.DBNote;
 import it.niedermann.owncloud.notes.model.ItemAdapter;
-import it.niedermann.owncloud.notes.persistence.NotesDatabase;
 import it.niedermann.owncloud.notes.persistence.NoteServerSyncHelper.ViewProvider;
+import it.niedermann.owncloud.notes.persistence.NotesDatabase;
 
 public class MultiSelectedActionModeCallback implements Callback {
 
@@ -71,7 +71,7 @@ public class MultiSelectedActionModeCallback implements Callback {
     @Override
     public boolean onActionItemClicked(ActionMode mode, MenuItem item) {
         switch (item.getItemId()) {
-            case R.id.menu_delete: {
+            case R.id.menu_delete:
                 try {
                     SingleSignOnAccount ssoAccount = SingleAccountHelper.getCurrentSingleSignOnAccount(context);
                     List<DBNote> deletedNotes = new ArrayList<>();
@@ -106,13 +106,12 @@ public class MultiSelectedActionModeCallback implements Callback {
                     e.printStackTrace();
                 }
                 return true;
-            }
-            case R.id.menu_move: {
+            case R.id.menu_move:
                 AccountChooserDialogFragment.newInstance().show(fragmentManager, NotesListViewActivity.class.getCanonicalName());
                 return true;
-            }
+            default:
+                return false;
         }
-        return false;
     }
 
     @Override

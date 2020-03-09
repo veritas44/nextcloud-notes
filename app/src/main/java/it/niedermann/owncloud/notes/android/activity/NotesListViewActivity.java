@@ -63,8 +63,8 @@ import it.niedermann.owncloud.notes.model.NavigationAdapter;
 import it.niedermann.owncloud.notes.model.NavigationAdapter.NavigationItem;
 import it.niedermann.owncloud.notes.persistence.LoadNotesListTask;
 import it.niedermann.owncloud.notes.persistence.LoadNotesListTask.NotesLoadedListener;
-import it.niedermann.owncloud.notes.persistence.NotesDatabase;
 import it.niedermann.owncloud.notes.persistence.NoteServerSyncHelper;
+import it.niedermann.owncloud.notes.persistence.NotesDatabase;
 import it.niedermann.owncloud.notes.util.NoteUtil;
 
 import static it.niedermann.owncloud.notes.util.SSOUtil.askForNewAccount;
@@ -108,7 +108,9 @@ public class NotesListViewActivity extends AppCompatActivity implements ItemAdap
 
     private ActionBarDrawerToggle drawerToggle;
     private NavigationAdapter adapterCategories;
-    private NavigationItem itemRecent, itemFavorites, itemUncategorized;
+    private NavigationItem itemRecent;
+    private NavigationItem itemFavorites;
+    private NavigationItem itemUncategorized;
     private Category navigationSelection = new Category(null, null);
     private String navigationOpen = "";
     private ActionMode mActionMode;
@@ -415,7 +417,9 @@ public class NotesListViewActivity extends AppCompatActivity implements ItemAdap
             }
 
             Map<String, Integer> favorites = db.getFavoritesCount(localAccount.getId());
+            //noinspection ConstantConditions
             int numFavorites = favorites.containsKey("1") ? favorites.get("1") : 0;
+            //noinspection ConstantConditions
             int numNonFavorites = favorites.containsKey("0") ? favorites.get("0") : 0;
             itemFavorites.count = numFavorites;
             itemRecent.count = numFavorites + numNonFavorites;
@@ -423,7 +427,8 @@ public class NotesListViewActivity extends AppCompatActivity implements ItemAdap
             ArrayList<NavigationItem> items = new ArrayList<>();
             items.add(itemRecent);
             items.add(itemFavorites);
-            NavigationItem lastPrimaryCategory = null, lastSecondaryCategory = null;
+            NavigationItem lastPrimaryCategory = null;
+            NavigationItem lastSecondaryCategory = null;
             for (NavigationItem item : categories) {
                 int slashIndex = item.label.indexOf('/');
                 String currentPrimaryCategory = slashIndex < 0 ? item.label : item.label.substring(0, slashIndex);

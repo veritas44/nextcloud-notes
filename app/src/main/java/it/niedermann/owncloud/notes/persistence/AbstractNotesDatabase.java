@@ -16,7 +16,9 @@ import androidx.annotation.Nullable;
 
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.Map;
 
+import it.niedermann.owncloud.notes.android.DarkModeSetting;
 import it.niedermann.owncloud.notes.android.appwidget.NoteListWidget;
 import it.niedermann.owncloud.notes.android.appwidget.SingleNoteWidget;
 import it.niedermann.owncloud.notes.model.DBStatus;
@@ -29,7 +31,8 @@ abstract class AbstractNotesDatabase extends SQLiteOpenHelper {
 
     private static final String TAG = AbstractNotesDatabase.class.getSimpleName();
 
-    private static final int database_version = 10;
+    private static final int database_version = 11;
+    @NonNull
     private final Context context;
 
     protected static final String database_name = "OWNCLOUD_NOTES";
@@ -53,12 +56,13 @@ abstract class AbstractNotesDatabase extends SQLiteOpenHelper {
     protected static final String key_category = "CATEGORY";
     protected static final String key_etag = "ETAG";
 
-    protected AbstractNotesDatabase(@Nullable Context context, @Nullable String name, @Nullable SQLiteDatabase.CursorFactory factory) {
+    protected AbstractNotesDatabase(@NonNull Context context, @Nullable String name, @Nullable SQLiteDatabase.CursorFactory factory) {
         super(context, name, factory, database_version);
         this.context = context;
     }
 
 
+    @NonNull
     public Context getContext() {
         return context;
     }
@@ -244,6 +248,19 @@ abstract class AbstractNotesDatabase extends SQLiteOpenHelper {
                 db.update(table_notes, values, key_id + " = ? ", new String[]{cursor.getString(0)});
             }
             cursor.close();
+        }
+        if (oldVersion < 11) {
+            SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context);
+            SharedPreferences.Editor editor = sharedPreferences.edit();
+            Map<String, ?> prefs = sharedPreferences.getAll();
+            for (Map.Entry<String, ?> pref : prefs.entrySet()) {
+                String key = pref.getKey();
+                if ("darkTheme".equals(key) || key.startsWith(NoteListWidget.DARK_THEME_KEY) || key.startsWith(SingleNoteWidget.DARK_THEME_KEY)) {
+                    Boolean darkTheme = (Boolean) pref.getValue();
+                    editor.putString(pref.getKey(), darkTheme ? DarkModeSetting.DARK.name() : DarkModeSetting.LIGHT.name());
+                }
+            }
+            editor.apply();
         }
     }
 
