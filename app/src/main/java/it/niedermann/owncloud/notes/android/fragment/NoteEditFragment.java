@@ -44,6 +44,7 @@ import io.noties.prism4j.Prism4j;
 import it.niedermann.owncloud.notes.R;
 import it.niedermann.owncloud.notes.databinding.FragmentNoteEditBinding;
 import it.niedermann.owncloud.notes.editor.handler.BlockQuoteEditHandler;
+import it.niedermann.owncloud.notes.editor.handler.CodeBlockEditHandler;
 import it.niedermann.owncloud.notes.editor.handler.CodeEditHandler;
 import it.niedermann.owncloud.notes.editor.handler.HeadingEditHandler;
 import it.niedermann.owncloud.notes.editor.handler.LinkEditHandler;
@@ -190,6 +191,7 @@ public class NoteEditFragment extends SearchableBaseNoteFragment {
                     .useEditHandler(new StrongEmphasisEditHandler())
                     .useEditHandler(new StrikethroughEditHandler())
                     .useEditHandler(new CodeEditHandler())
+                    .useEditHandler(new CodeBlockEditHandler())
                     .useEditHandler(new BlockQuoteEditHandler())
                     .useEditHandler(new LinkEditHandler(onClick))
                     .useEditHandler(new HeadingEditHandler())
