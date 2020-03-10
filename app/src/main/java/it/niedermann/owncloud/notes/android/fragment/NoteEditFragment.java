@@ -1,6 +1,8 @@
 package it.niedermann.owncloud.notes.android.fragment;
 
 import android.content.Context;
+import android.content.SharedPreferences;
+import android.graphics.Typeface;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
@@ -10,6 +12,7 @@ import android.text.Layout;
 import android.text.SpannableString;
 import android.text.TextWatcher;
 import android.util.Log;
+import android.util.TypedValue;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.View;
@@ -22,6 +25,7 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.core.view.ViewCompat;
+import androidx.preference.PreferenceManager;
 
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
@@ -185,6 +189,7 @@ public class NoteEditFragment extends SearchableBaseNoteFragment {
                     .usePlugin(SyntaxHighlightPlugin.create(new Prism4j(new GrammarLocatorDef()), Prism4jThemeDefault.create()))
                     .build();
 
+
             final LinkEditHandler.OnClick onClick = (widget, link) -> markwon.configuration().linkResolver().resolve(widget, link);
             final MarkwonEditor editor = MarkwonEditor.builder(markwon)
                     .useEditHandler(new EmphasisEditHandler())
@@ -208,11 +213,11 @@ public class NoteEditFragment extends SearchableBaseNoteFragment {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
                 binding.editContent.setCustomInsertionActionModeCallback(new ContextBasedFormattingCallback(binding.editContent));
             }
-//            SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(requireContext().getApplicationContext());
-//            binding.editContent.setTextSize(TypedValue.COMPLEX_UNIT_PX, getFontSizeFromPreferences(sp));
-//            if (sp.getBoolean(getString(R.string.pref_key_font), false)) {
-//                binding.editContent.setTypeface(Typeface.MONOSPACE);
-//            }
+            SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(requireContext().getApplicationContext());
+            binding.editContent.setTextSize(TypedValue.COMPLEX_UNIT_PX, getFontSizeFromPreferences(sp));
+            if (sp.getBoolean(getString(R.string.pref_key_font), false)) {
+                binding.editContent.setTypeface(Typeface.MONOSPACE);
+            }
         }
     }
 
