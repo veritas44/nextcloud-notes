@@ -12,6 +12,7 @@ import android.view.Menu;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ScrollView;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
@@ -41,15 +42,11 @@ import it.niedermann.owncloud.notes.databinding.FragmentNotePreviewBinding;
 import it.niedermann.owncloud.notes.editor.plugins.InternalLinksPlugin;
 import it.niedermann.owncloud.notes.editor.plugins.ToggleableTaskListPlugin;
 import it.niedermann.owncloud.notes.editor.syntaxhighlighter.GrammarLocatorDef;
-import it.niedermann.owncloud.notes.model.LoginStatus;
 import it.niedermann.owncloud.notes.persistence.NotesDatabase;
-import it.niedermann.owncloud.notes.util.DisplayUtils;
-import it.niedermann.owncloud.notes.util.MarkDownUtil;
 import it.niedermann.owncloud.notes.util.NoteLinksUtils;
 import it.niedermann.owncloud.notes.util.SSOUtil;
 
 import static it.niedermann.owncloud.notes.util.DisplayUtils.searchAndColor;
-import static it.niedermann.owncloud.notes.util.NoteLinksUtils.extractNoteRemoteId;
 public class NotePreviewFragment extends SearchableBaseNoteFragment implements OnRefreshListener {
 
     private String changedText;

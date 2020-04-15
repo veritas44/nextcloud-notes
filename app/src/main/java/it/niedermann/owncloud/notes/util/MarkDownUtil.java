@@ -1,22 +1,6 @@
 package it.niedermann.owncloud.notes.util;
 
-import android.content.Context;
-import android.graphics.Color;
-import android.text.Spanned;
-import android.text.TextUtils;
-import android.util.Log;
-
 import androidx.annotation.NonNull;
-import androidx.core.content.res.ResourcesCompat;
-
-import com.yydcdut.markdown.MarkdownConfiguration;
-import com.yydcdut.markdown.MarkdownConfiguration.Builder;
-import com.yydcdut.markdown.MarkdownProcessor;
-import com.yydcdut.markdown.span.MDImageSpan;
-import com.yydcdut.markdown.theme.ThemeDefault;
-import com.yydcdut.markdown.theme.ThemeSonsOfObsidian;
-
-import it.niedermann.owncloud.notes.R;
 
 /**
  * Created by stefan on 07.12.16.
