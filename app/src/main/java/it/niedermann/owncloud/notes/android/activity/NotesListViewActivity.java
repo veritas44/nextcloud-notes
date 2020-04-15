@@ -20,7 +20,6 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.ActionBarDrawerToggle;
-import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.view.ActionMode;
 import androidx.appcompat.widget.AppCompatImageView;
 import androidx.appcompat.widget.SearchView;
@@ -46,7 +45,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-import it.niedermann.nextcloud.exception.ExceptionHandler;
 import it.niedermann.owncloud.notes.R;
 import it.niedermann.owncloud.notes.android.MultiSelectedActionModeCallback;
 import it.niedermann.owncloud.notes.android.NotesListViewItemTouchHelper;
@@ -58,7 +56,6 @@ import it.niedermann.owncloud.notes.model.ISyncCallback;
 import it.niedermann.owncloud.notes.model.Item;
 import it.niedermann.owncloud.notes.model.ItemAdapter;
 import it.niedermann.owncloud.notes.model.LocalAccount;
-import it.niedermann.owncloud.notes.model.LoginStatus;
 import it.niedermann.owncloud.notes.model.NavigationAdapter;
 import it.niedermann.owncloud.notes.model.NavigationAdapter.NavigationItem;
 import it.niedermann.owncloud.notes.persistence.LoadNotesListTask;
@@ -69,7 +66,7 @@ import it.niedermann.owncloud.notes.util.NoteUtil;
 
 import static it.niedermann.owncloud.notes.util.SSOUtil.askForNewAccount;
 
-public class NotesListViewActivity extends AppCompatActivity implements ItemAdapter.NoteClickListener, NoteServerSyncHelper.ViewProvider, AccountChooserListener {
+public class NotesListViewActivity extends LockedActivity implements ItemAdapter.NoteClickListener, NoteServerSyncHelper.ViewProvider, AccountChooserListener {
 
     private static final String TAG = NotesListViewActivity.class.getSimpleName();
 
@@ -129,7 +126,6 @@ public class NotesListViewActivity extends AppCompatActivity implements ItemAdap
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        Thread.currentThread().setUncaughtExceptionHandler(new ExceptionHandler(this));
 
         binding = DrawerLayoutBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
@@ -217,7 +213,7 @@ public class NotesListViewActivity extends AppCompatActivity implements ItemAdap
         localAccount = db.getLocalAccountByAccountName(accountName);
         try {
             ssoAccount = SingleAccountHelper.getCurrentSingleSignOnAccount(getApplicationContext());
-            new NotesListViewItemTouchHelper(ssoAccount, this, this, db, adapter, syncCallBack, this::refreshLists).attachToRecyclerView(listView);
+            new NotesListViewItemTouchHelper(ssoAccount, this, db, adapter, syncCallBack, this::refreshLists, swipeRefreshLayout, this).attachToRecyclerView(listView);
             synchronize();
         } catch (NextcloudFilesAppAccountNotFoundException | NoCurrentAccountSelectedException e) {
             Log.i(TAG, "Tried to select account, but got an " + e.getClass().getSimpleName() + ". Asking for importing an account...");
@@ -794,7 +790,7 @@ public class NotesListViewActivity extends AppCompatActivity implements ItemAdap
                 Log.d(TAG, "Network is connected, but sync is not possible");
             } else {
                 Log.d(TAG, "Sync is not possible, because network is not connected");
-                Snackbar.make(coordinatorLayout, getString(R.string.error_sync, getString(LoginStatus.NO_NETWORK.str)), Snackbar.LENGTH_LONG).show();
+                Snackbar.make(coordinatorLayout, getString(R.string.error_sync, getString(R.string.error_no_network)), Snackbar.LENGTH_LONG).show();
             }
         }
     }

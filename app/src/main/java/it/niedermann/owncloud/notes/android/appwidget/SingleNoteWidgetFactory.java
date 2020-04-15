@@ -5,10 +5,14 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
-import android.preference.PreferenceManager;
 import android.util.Log;
 import android.widget.RemoteViews;
 import android.widget.RemoteViewsService;
+
+import androidx.preference.PreferenceManager;
+
+import com.yydcdut.markdown.MarkdownProcessor;
+import com.yydcdut.markdown.syntax.text.TextFactory;
 
 import it.niedermann.owncloud.notes.R;
 import it.niedermann.owncloud.notes.android.activity.EditNoteActivity;
@@ -17,6 +21,7 @@ import it.niedermann.owncloud.notes.persistence.NotesDatabase;
 import it.niedermann.owncloud.notes.util.Notes;
 
 import static it.niedermann.owncloud.notes.android.appwidget.SingleNoteWidget.DARK_THEME_KEY;
+import static it.niedermann.owncloud.notes.util.MarkDownUtil.parseCompat;
 
 public class SingleNoteWidgetFactory implements RemoteViewsService.RemoteViewsFactory {
 
@@ -99,7 +104,6 @@ public class SingleNoteWidgetFactory implements RemoteViewsService.RemoteViewsFa
         extras.putLong(EditNoteActivity.PARAM_NOTE_ID, note.getId());
         extras.putLong(EditNoteActivity.PARAM_ACCOUNT_ID, note.getAccountId());
         fillInIntent.putExtras(extras);
-        fillInIntent.setFlags(Intent.FLAG_ACTIVITY_NO_HISTORY);
         if (darkModeActive) {
             note_content = new RemoteViews(context.getPackageName(), R.layout.widget_single_note_content_dark);
             note_content.setOnClickFillInIntent(R.id.single_note_content_tv_dark, fillInIntent);

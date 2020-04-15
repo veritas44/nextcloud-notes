@@ -43,9 +43,8 @@
     <string name="settings_font_title">Γραμματοσειρά monospace</string>
     <string name="settings_font_size">Μέγεθος γραμματοσειράς</string>
     <string name="settings_wifi_only">Συγχρονισμός μόνο σε Wi-Fi</string>
+    <string name="settings_lock">Προστασία συνθηματικού</string>
     <string name="settings_background_sync">Συγχρονισμός στο παρασκήνιο</string>
-
-    <!-- Certificates -->
 
     <!-- Network -->
 
@@ -54,8 +53,8 @@
     <string name="error_json">Είναι ενεργοποιημένη η εφαρμογή Σημειώσεων στον διακομιστή;</string>
     <string name="error_no_network">Δεν υπάρχει σύνδεση στο δίκτυο</string>
     <string name="error_files_app">Εγκαταστάθηκε η εφαρμογή αρχείων?</string>
-    <string name="error_unknown">Προέκυψε άγνωστο σφάλμα.</string>
     <string name="error_insufficient_storage">Ο αποθηκευτικός χώρος του διακομιστή γέμισε.</string>
+    <string name="error_unknown">Προέκυψε άγνωστο σφάλμα.</string>
 
     <!-- About -->
     <string name="about_version_title">Έκδοση</string>
@@ -95,9 +94,10 @@
     <!-- Shortcuts -->
     <string name="shortcut_create_long">Δημιουργία νέας σημείωσης</string>
 
-    <!-- These values should not be translateable. They should be migrated at some point.  -->
+    <!-- These values should not be translatable. They should be migrated at some point.  -->
     <string name="pref_value_font_normal">Κανονικό</string>
     <string name="pref_value_wifi_and_mobile">Συγχρονισμός μόνο σε Wi-Fi και δεδομένα κινητού</string>
+    <string name="pref_value_lock">Προστασία συνθηματικού</string>
 
     <string name="simple_error">Σφάλμα</string>
     <string name="simple_close">Κλείσιμο</string>
@@ -124,6 +124,9 @@
     <string name="category_readonly">Μόνο για ανάγνωση</string>
     <string name="no_category">Χωρίς κατηγορία</string>
     <string name="add_category">Προσθήκη %1$s</string>
+    <string name="simple_checkbox">Πλαίσιο ελέγχου</string>
+    <string name="unlock_notes">Ξεκλείδωμα σημειώσεων</string>
+    <string name="simple_beta">Δοκιμαστικό</string>
     <!-- Array: note modes -->
     <string-array name="noteMode_entries">
         <item>Άνοιγμα σε λειτουργία τροποποίησης</item>
@@ -144,6 +147,12 @@
         <item>15 λεπτά</item>
         <item>1 ώρα</item>
         <item>6 ώρες</item>
+    </string-array>
+
+    <string-array name="darkmode_entries">
+        <item>Φωτεινό</item>
+        <item>Σκούρο</item>
+        <item>Προεπιλογή Συστήματος</item>
     </string-array>
 
     <!-- Plurals -->

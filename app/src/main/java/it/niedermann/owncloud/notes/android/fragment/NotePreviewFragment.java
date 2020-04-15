@@ -3,7 +3,6 @@ package it.niedermann.owncloud.notes.android.fragment;
 import android.content.SharedPreferences;
 import android.graphics.Typeface;
 import android.os.Bundle;
-import android.preference.PreferenceManager;
 import android.text.Layout;
 import android.text.SpannableString;
 import android.text.method.LinkMovementMethod;
@@ -18,6 +17,7 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.core.view.ViewCompat;
+import androidx.preference.PreferenceManager;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout.OnRefreshListener;
 
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
@@ -44,9 +44,12 @@ import it.niedermann.owncloud.notes.editor.syntaxhighlighter.GrammarLocatorDef;
 import it.niedermann.owncloud.notes.model.LoginStatus;
 import it.niedermann.owncloud.notes.persistence.NotesDatabase;
 import it.niedermann.owncloud.notes.util.DisplayUtils;
+import it.niedermann.owncloud.notes.util.MarkDownUtil;
 import it.niedermann.owncloud.notes.util.NoteLinksUtils;
 import it.niedermann.owncloud.notes.util.SSOUtil;
 
+import static it.niedermann.owncloud.notes.util.DisplayUtils.searchAndColor;
+import static it.niedermann.owncloud.notes.util.NoteLinksUtils.extractNoteRemoteId;
 public class NotePreviewFragment extends SearchableBaseNoteFragment implements OnRefreshListener {
 
     private String changedText;
@@ -147,10 +150,11 @@ public class NotePreviewFragment extends SearchableBaseNoteFragment implements O
     }
 
     @Override
-    protected void colorWithText(String newText) {
-        if (ViewCompat.isAttachedToWindow(binding.singleNoteContent)) {
-//            markwon.setMarkdown(binding.singleNoteContent, DisplayUtils.searchAndColor(getContent(), new SpannableString (getContent()), newText, getResources().getColor(R.color.primary)));
-            binding.singleNoteContent.setText(DisplayUtils.searchAndColor(getContent(), new SpannableString(getContent()), newText, getResources().getColor(R.color.primary)));
+    protected void colorWithText(@NonNull String newText, @Nullable Integer current) {
+        if (binding != null && ViewCompat.isAttachedToWindow(binding.singleNoteContent)) {
+            binding.singleNoteContent.setText(
+                    searchAndColor(new SpannableString(getContent()), newText, requireContext(), current),
+                    TextView.BufferType.SPANNABLE);
         }
     }
 
@@ -176,7 +180,7 @@ public class NotePreviewFragment extends SearchableBaseNoteFragment implements O
             }
         } else {
             binding.swiperefreshlayout.setRefreshing(false);
-            Toast.makeText(requireContext(), getString(R.string.error_sync, getString(LoginStatus.NO_NETWORK.str)), Toast.LENGTH_LONG).show();
+            Toast.makeText(requireContext(), getString(R.string.error_sync, getString(R.string.error_no_network)), Toast.LENGTH_LONG).show();
         }
     }
 }

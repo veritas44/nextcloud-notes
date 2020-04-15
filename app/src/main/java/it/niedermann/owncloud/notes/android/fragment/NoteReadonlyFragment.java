@@ -3,7 +3,6 @@ package it.niedermann.owncloud.notes.android.fragment;
 import android.content.SharedPreferences;
 import android.graphics.Typeface;
 import android.os.Bundle;
-import android.preference.PreferenceManager;
 import android.text.Layout;
 import android.text.SpannableString;
 import android.text.method.LinkMovementMethod;
@@ -18,7 +17,7 @@ import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.core.view.ViewCompat;
+import androidx.preference.PreferenceManager;
 
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
@@ -28,6 +27,10 @@ import it.niedermann.owncloud.notes.databinding.FragmentNotePreviewBinding;
 import it.niedermann.owncloud.notes.model.ISyncCallback;
 import it.niedermann.owncloud.notes.persistence.NotesDatabase;
 import it.niedermann.owncloud.notes.util.DisplayUtils;
+
+import static androidx.core.view.ViewCompat.isAttachedToWindow;
+import static it.niedermann.owncloud.notes.util.DisplayUtils.searchAndColor;
+import static it.niedermann.owncloud.notes.util.MarkDownUtil.parseCompat;
 
 public class NoteReadonlyFragment extends SearchableBaseNoteFragment {
 
@@ -112,6 +115,7 @@ public class NoteReadonlyFragment extends SearchableBaseNoteFragment {
             onResume();
         } catch (StringIndexOutOfBoundsException e) {
             // Workaround for RxMarkdown: https://github.com/stefan-niedermann/nextcloud-notes/issues/668
+            binding.singleNoteContent.setText(note.getContent());
             Toast.makeText(binding.singleNoteContent.getContext(), R.string.could_not_load_preview_two_digit_numbered_list, Toast.LENGTH_LONG).show();
             e.printStackTrace();
         }
@@ -138,11 +142,9 @@ public class NoteReadonlyFragment extends SearchableBaseNoteFragment {
     }
 
     @Override
-    protected void colorWithText(String newText) {
-        if (binding != null && ViewCompat.isAttachedToWindow(binding.singleNoteContent)) {
-            binding.singleNoteContent.setText(/*markdownProcessor.parse(*/DisplayUtils.searchAndColor(getContent(), new SpannableString
-                            (getContent()), newText, getResources().getColor(R.color.primary)/*)*/),
-                    TextView.BufferType.SPANNABLE);
+    protected void colorWithText(@NonNull String newText, @Nullable Integer current) {
+        if ((binding != null) && isAttachedToWindow(binding.singleNoteContent)) {
+            binding.singleNoteContent.setText(searchAndColor(new SpannableString(/*parseCompat(markdownProcessor, */getContent()/*)*/), newText, requireContext(), current), TextView.BufferType.SPANNABLE);
         }
     }
 

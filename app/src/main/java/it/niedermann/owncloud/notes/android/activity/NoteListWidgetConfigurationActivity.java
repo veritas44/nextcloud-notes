@@ -1,4 +1,4 @@
-package it.niedermann.owncloud.notes.android.appwidget;
+package it.niedermann.owncloud.notes.android.activity;
 
 import android.app.Activity;
 import android.appwidget.AppWidgetManager;
@@ -6,12 +6,11 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.AsyncTask;
 import android.os.Bundle;
-import android.preference.PreferenceManager;
 import android.util.Log;
 import android.widget.Toast;
 
 import androidx.annotation.Nullable;
-import androidx.appcompat.app.AppCompatActivity;
+import androidx.preference.PreferenceManager;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -24,13 +23,13 @@ import java.util.List;
 import java.util.Map;
 
 import it.niedermann.owncloud.notes.R;
-import it.niedermann.owncloud.notes.android.activity.NotesListViewActivity;
+import it.niedermann.owncloud.notes.android.appwidget.NoteListWidget;
 import it.niedermann.owncloud.notes.model.LocalAccount;
 import it.niedermann.owncloud.notes.model.NavigationAdapter;
 import it.niedermann.owncloud.notes.persistence.NotesDatabase;
 import it.niedermann.owncloud.notes.util.Notes;
 
-public class NoteListWidgetConfiguration extends AppCompatActivity {
+public class NoteListWidgetConfigurationActivity extends LockedActivity {
     private static final String TAG = Activity.class.getSimpleName();
 
     private int appWidgetId = AppWidgetManager.INVALID_APPWIDGET_ID;
@@ -63,7 +62,7 @@ public class NoteListWidgetConfiguration extends AppCompatActivity {
 
         if (extras != null) {
             appWidgetId = extras.getInt(AppWidgetManager.EXTRA_APPWIDGET_ID,
-                                            AppWidgetManager.INVALID_APPWIDGET_ID);
+                    AppWidgetManager.INVALID_APPWIDGET_ID);
         }
 
         if (appWidgetId == AppWidgetManager.INVALID_APPWIDGET_ID) {
@@ -72,13 +71,13 @@ public class NoteListWidgetConfiguration extends AppCompatActivity {
         }
 
         itemRecent = new NavigationAdapter.NavigationItem(NotesListViewActivity.ADAPTER_KEY_RECENT,
-                                                            getString(R.string.label_all_notes),
-                                                            null,
-                                                            R.drawable.ic_access_time_grey600_24dp);
+                getString(R.string.label_all_notes),
+                null,
+                R.drawable.ic_access_time_grey600_24dp);
         itemFavorites = new NavigationAdapter.NavigationItem(NotesListViewActivity.ADAPTER_KEY_STARRED,
-                                                            getString(R.string.label_favorites),
-                                                            null,
-                                                            R.drawable.ic_star_yellow_24dp);
+                getString(R.string.label_favorites),
+                null,
+                R.drawable.ic_star_yellow_24dp);
         RecyclerView recyclerView;
         RecyclerView.LayoutManager layoutManager;
 
@@ -104,8 +103,8 @@ public class NoteListWidgetConfiguration extends AppCompatActivity {
                 sp.putString(NoteListWidget.DARK_THEME_KEY + appWidgetId, Notes.getAppTheme(getApplicationContext()).name());
                 sp.apply();
 
-                Intent updateIntent = new Intent(   AppWidgetManager.ACTION_APPWIDGET_UPDATE, null,
-                                                    getApplicationContext(), NoteListWidget.class);
+                Intent updateIntent = new Intent(AppWidgetManager.ACTION_APPWIDGET_UPDATE, null,
+                        getApplicationContext(), NoteListWidget.class);
                 updateIntent.putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, appWidgetId);
                 setResult(RESULT_OK, updateIntent);
                 getApplicationContext().sendBroadcast(updateIntent);
@@ -117,7 +116,7 @@ public class NoteListWidgetConfiguration extends AppCompatActivity {
             }
         });
 
-        recyclerView = findViewById(R.id.nlw_config_recyclerv);
+        recyclerView = findViewById(R.id.recycler_view);
         recyclerView.setHasFixedSize(true);
         layoutManager = new LinearLayoutManager(this);
         recyclerView.setLayoutManager(layoutManager);

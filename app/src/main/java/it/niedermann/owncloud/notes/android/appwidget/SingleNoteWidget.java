@@ -8,8 +8,9 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.net.Uri;
-import android.preference.PreferenceManager;
 import android.widget.RemoteViews;
+
+import androidx.preference.PreferenceManager;
 
 import it.niedermann.owncloud.notes.R;
 import it.niedermann.owncloud.notes.android.DarkModeSetting;
@@ -26,7 +27,6 @@ public class SingleNoteWidget extends AppWidgetProvider {
     static void updateAppWidget(Context context, AppWidgetManager awm, int[] appWidgetIds) {
         SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(context);
         Intent templateIntent = new Intent(context, EditNoteActivity.class);
-        templateIntent.addFlags(Intent.FLAG_ACTIVITY_NO_HISTORY);
 
         for (int appWidgetId : appWidgetIds) {
             // onUpdate has been triggered before the user finished configuring the widget

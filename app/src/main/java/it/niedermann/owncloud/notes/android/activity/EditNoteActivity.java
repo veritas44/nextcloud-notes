@@ -3,13 +3,12 @@ package it.niedermann.owncloud.notes.android.activity;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
-import android.preference.PreferenceManager;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 
-import androidx.appcompat.app.AppCompatActivity;
 import androidx.fragment.app.Fragment;
+import androidx.preference.PreferenceManager;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -18,7 +17,6 @@ import java.io.InputStreamReader;
 import java.util.Calendar;
 import java.util.Objects;
 
-import it.niedermann.nextcloud.exception.ExceptionHandler;
 import it.niedermann.owncloud.notes.R;
 import it.niedermann.owncloud.notes.android.fragment.BaseNoteFragment;
 import it.niedermann.owncloud.notes.android.fragment.NoteEditFragment;
@@ -33,7 +31,7 @@ import it.niedermann.owncloud.notes.util.NoteUtil;
 
 import static it.niedermann.owncloud.notes.android.fragment.AccountChooserAdapter.AccountChooserListener;
 
-public class EditNoteActivity extends AppCompatActivity implements BaseNoteFragment.NoteFragmentListener, AccountChooserListener {
+public class EditNoteActivity extends LockedActivity implements BaseNoteFragment.NoteFragmentListener, AccountChooserListener {
 
     private static final String TAG = EditNoteActivity.class.getSimpleName();
 
@@ -52,7 +50,6 @@ public class EditNoteActivity extends AppCompatActivity implements BaseNoteFragm
     @Override
     protected void onCreate(final Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        Thread.currentThread().setUncaughtExceptionHandler(new ExceptionHandler(this));
 
         binding = ActivityEditBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
@@ -205,6 +202,7 @@ public class EditNoteActivity extends AppCompatActivity implements BaseNoteFragm
 
     @Override
     public void onBackPressed() {
+        super.onBackPressed();
         close();
     }
 

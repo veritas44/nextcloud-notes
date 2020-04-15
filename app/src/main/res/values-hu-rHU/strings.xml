@@ -43,9 +43,8 @@
     <string name="settings_font_title">Fix szélességű betűkészlet</string>
     <string name="settings_font_size">Betű méret</string>
     <string name="settings_wifi_only">Szinkronizáció csak Wifin keresztül</string>
+    <string name="settings_lock">Jelszavas védelem</string>
     <string name="settings_background_sync">Háttér-szinkronizálás</string>
-
-    <!-- Certificates -->
 
     <!-- Network -->
 
@@ -54,8 +53,8 @@
     <string name="error_json">Be van kapcsolva a Jegyzetek alkalmazás a kiszolgálón?</string>
     <string name="error_no_network">Nincs hálózati kapcsolat</string>
     <string name="error_files_app">Telepítette a Fájlok alkalmazást?</string>
-    <string name="error_unknown">Ismeretlen hiba történt.</string>
     <string name="error_insufficient_storage">A kiszolgáló-tárhelye megtelt.</string>
+    <string name="error_unknown">Ismeretlen hiba történt.</string>
 
     <!-- About -->
     <string name="about_version_title">Verzió</string>
@@ -95,9 +94,10 @@
     <!-- Shortcuts -->
     <string name="shortcut_create_long">Új jegyzet létrehozása</string>
 
-    <!-- These values should not be translateable. They should be migrated at some point.  -->
+    <!-- These values should not be translatable. They should be migrated at some point.  -->
     <string name="pref_value_font_normal">Normál</string>
     <string name="pref_value_wifi_and_mobile">Szinkronizálás Wi-Fin és mobil adatkapcsolaton</string>
+    <string name="pref_value_lock">Jelszavas védelem</string>
 
     <string name="simple_error">Hiba</string>
     <string name="simple_close">Bezár</string>
@@ -124,6 +124,7 @@
     <string name="category_readonly">Csak olvasható</string>
     <string name="no_category">Nincs kategória</string>
     <string name="add_category">%1$s hozzáadása</string>
+    <string name="simple_checkbox">Jelölőmező</string>
     <!-- Array: note modes -->
     <string-array name="noteMode_entries">
         <item>Megnyitás szerkesztésre</item>
@@ -144,6 +145,12 @@
         <item>15 perc</item>
         <item>1 óra</item>
         <item>6 óra</item>
+    </string-array>
+
+    <string-array name="darkmode_entries">
+        <item>Világos</item>
+        <item>Sötét</item>
+        <item>Rendszer alapértelmezés</item>
     </string-array>
 
     <!-- Plurals -->

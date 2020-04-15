@@ -24,7 +24,7 @@ import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.core.view.ViewCompat;
+import androidx.preference.PreferenceManager;
 import androidx.preference.PreferenceManager;
 
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
@@ -61,6 +61,9 @@ import it.niedermann.owncloud.notes.util.DisplayUtils;
 import it.niedermann.owncloud.notes.util.NotesTextWatcher;
 import it.niedermann.owncloud.notes.util.format.ContextBasedFormattingCallback;
 import it.niedermann.owncloud.notes.util.format.ContextBasedRangeFormattingCallback;
+
+import static androidx.core.view.ViewCompat.isAttachedToWindow;
+import static it.niedermann.owncloud.notes.util.DisplayUtils.searchAndColor;
 
 public class NoteEditFragment extends SearchableBaseNoteFragment {
 
@@ -284,11 +287,10 @@ public class NoteEditFragment extends SearchableBaseNoteFragment {
     }
 
     @Override
-    protected void colorWithText(String newText) {
-        if (binding != null && ViewCompat.isAttachedToWindow(binding.editContent)) {
-            binding.editContent.setText(DisplayUtils.searchAndColor(getContent(), new SpannableString
-                            (getContent()), newText, getResources().getColor(R.color.primary)),
-                    TextView.BufferType.SPANNABLE);
+    protected void colorWithText(@NonNull String newText, @Nullable Integer current) {
+        if (binding != null && isAttachedToWindow(binding.editContent)) {
+            binding.editContent.clearFocus();
+            binding.editContent.setText(searchAndColor(new SpannableString(getContent()), newText, requireContext(), current), TextView.BufferType.SPANNABLE);
         }
     }
 }

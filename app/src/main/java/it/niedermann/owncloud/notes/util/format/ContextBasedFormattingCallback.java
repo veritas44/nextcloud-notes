@@ -15,6 +15,7 @@ import it.niedermann.owncloud.notes.util.MarkDownUtil;
 
 import static it.niedermann.owncloud.notes.util.ClipboardUtil.getClipboardURLorNull;
 import static it.niedermann.owncloud.notes.util.MarkDownUtil.CHECKBOX_UNCHECKED_MINUS_TRAILING_SPACE;
+import static it.niedermann.owncloud.notes.util.MarkDownUtil.getEndOfLine;
 import static it.niedermann.owncloud.notes.util.MarkDownUtil.getStartOfLine;
 
 public class ContextBasedFormattingCallback implements ActionMode.Callback {
@@ -37,14 +38,9 @@ public class ContextBasedFormattingCallback implements ActionMode.Callback {
     public boolean onPrepareActionMode(ActionMode mode, Menu menu) {
         CharSequence text = editText.getText();
         int originalCursorPosition = editText.getSelectionStart();
-        if(originalCursorPosition >= 0 && originalCursorPosition <= text.length()) {
+        if (originalCursorPosition >= 0 && originalCursorPosition <= text.length()) {
             int startOfLine = getStartOfLine(text, originalCursorPosition);
-            int endOfLine = originalCursorPosition;
-            if (endOfLine != startOfLine) {
-                while (endOfLine < text.length() && text.charAt(endOfLine + 1) != '\n') {
-                    endOfLine--;
-                }
-            }
+            int endOfLine = getEndOfLine(text, startOfLine);
             String line = text.subSequence(startOfLine, endOfLine).toString();
             if (MarkDownUtil.lineStartsWithCheckbox(line)) {
                 menu.findItem(R.id.checkbox).setVisible(false);
@@ -74,12 +70,7 @@ public class ContextBasedFormattingCallback implements ActionMode.Callback {
         CharSequence text = editText.getText();
         int originalCursorPosition = editText.getSelectionStart();
         int startOfLine = getStartOfLine(text, originalCursorPosition);
-        int endOfLine = originalCursorPosition;
-        if (endOfLine != startOfLine) {
-            while (endOfLine < text.length() && text.charAt(endOfLine + 1) != '\n') {
-                endOfLine--;
-            }
-        }
+        Log.i(TAG, "Inserting checkbox at position " + startOfLine);
         CharSequence part1 = text.subSequence(0, startOfLine);
         CharSequence part2 = text.subSequence(startOfLine, text.length());
         editText.setText(TextUtils.concat(part1, CHECKBOX_UNCHECKED_MINUS_TRAILING_SPACE, part2));
@@ -92,14 +83,17 @@ public class ContextBasedFormattingCallback implements ActionMode.Callback {
         int end = start;
         boolean textToFormatIsLink = TextUtils.indexOf(editText.getText().subSequence(start, end), "http") == 0;
         if (textToFormatIsLink) {
+            Log.i(TAG, "Inserting link description for position " + start + " to " + end);
             ssb.insert(end, ")");
             ssb.insert(start, "[](");
         } else {
             String clipboardURL = getClipboardURLorNull(editText.getContext());
             if (clipboardURL != null) {
+                Log.i(TAG, "Inserting link from clipboard at position " + start + " to " + end + ": " + clipboardURL);
                 ssb.insert(end, "](" + clipboardURL + ")");
                 end += clipboardURL.length();
             } else {
+                Log.i(TAG, "Inserting empty link for position " + start + " to " + end);
                 ssb.insert(end, "]()");
             }
             ssb.insert(start, "[");

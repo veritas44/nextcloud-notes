@@ -43,9 +43,8 @@
     <string name="settings_font_title">Písmo se všemi znaky stejně širokými</string>
     <string name="settings_font_size">Velikost písmen</string>
     <string name="settings_wifi_only">Synchronizovat pouze přes Wi-Fi</string>
+    <string name="settings_lock">Ochrana heslem</string>
     <string name="settings_background_sync">Synchronizace na pozadí</string>
-
-    <!-- Certificates -->
 
     <!-- Network -->
 
@@ -54,8 +53,8 @@
     <string name="error_json">Je na serveru aktivní aplikace Poznámky?</string>
     <string name="error_no_network">Žádné síťové spojení</string>
     <string name="error_files_app">Máte nainstalovanou aplikaci Soubory?</string>
-    <string name="error_unknown">Došlo k neznámé chybě.</string>
     <string name="error_insufficient_storage">Úložiště vašeho serveru je plné.</string>
+    <string name="error_unknown">Došlo k neznámé chybě.</string>
 
     <!-- About -->
     <string name="about_version_title">Verze</string>
@@ -95,9 +94,10 @@
     <!-- Shortcuts -->
     <string name="shortcut_create_long">Vytvořit novou poznámku</string>
 
-    <!-- These values should not be translateable. They should be migrated at some point.  -->
+    <!-- These values should not be translatable. They should be migrated at some point.  -->
     <string name="pref_value_font_normal">Normální</string>
     <string name="pref_value_wifi_and_mobile">Synchronizovat přes Wi-Fi a mobilní data</string>
+    <string name="pref_value_lock">Ochrana heslem</string>
 
     <string name="simple_error">Chyba</string>
     <string name="simple_close">Zavřít</string>
@@ -124,6 +124,9 @@
     <string name="category_readonly">Pouze pro čtení</string>
     <string name="no_category">Žádná kategorie</string>
     <string name="add_category">Přidat %1$s</string>
+    <string name="simple_checkbox">Zatržítko</string>
+    <string name="unlock_notes">Odemknout poznámky</string>
+    <string name="simple_beta">Vývojové</string>
     <!-- Array: note modes -->
     <string-array name="noteMode_entries">
         <item>Otevřít v režimu úprav</item>
@@ -144,6 +147,12 @@
         <item>15 minut</item>
         <item>1 hodina</item>
         <item>6 hodin</item>
+    </string-array>
+
+    <string-array name="darkmode_entries">
+        <item>Světlý</item>
+        <item>Tmavý</item>
+        <item>Systémové výchozí</item>
     </string-array>
 
     <!-- Plurals -->

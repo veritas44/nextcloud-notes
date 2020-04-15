@@ -41,8 +41,7 @@
     <string name="settings_font_title">Font fiksne širine</string>
     <string name="settings_font_size">Veličina fonta</string>
     <string name="settings_wifi_only">Sinhronizuj samo preko bežične veze</string>
-    <!-- Certificates -->
-
+    <string name="settings_lock">Password protection</string>
     <!-- Network -->
 
     <!-- Error -->
@@ -86,9 +85,10 @@
     <!-- Shortcuts -->
     <string name="shortcut_create_long">Napravi novu belešku</string>
 
-    <!-- These values should not be translateable. They should be migrated at some point.  -->
+    <!-- These values should not be translatable. They should be migrated at some point.  -->
     <string name="pref_value_font_normal">Normalna</string>
     <string name="pref_value_wifi_and_mobile">Sinhronizuj i na bežičnoj i na mobilnoj vezi</string>
+    <string name="pref_value_lock">Password protection</string>
 
     <string name="simple_error">Greška</string>
     <string name="simple_close">Zatvori</string>
@@ -108,6 +108,7 @@
     <string name="simple_more">Još</string>
     <string name="simple_move">Premesti</string>
     <string name="add_category">Dodaj %1$s</string>
+    <string name="simple_checkbox">Štikliranje</string>
     <!-- Array: note modes -->
     <string-array name="noteMode_entries">
         <item>Otvori u režimu uređivanja</item>
@@ -128,6 +129,12 @@
         <item>15 minuta</item>
         <item>1 sat</item>
         <item>6 sati</item>
+    </string-array>
+
+    <string-array name="darkmode_entries">
+        <item>Svetla</item>
+        <item>Tamna</item>
+        <item>Podrazumevani sistem</item>
     </string-array>
 
     <!-- Plurals -->

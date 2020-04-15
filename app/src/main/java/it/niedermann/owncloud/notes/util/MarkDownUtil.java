@@ -1,6 +1,22 @@
 package it.niedermann.owncloud.notes.util;
 
+import android.content.Context;
+import android.graphics.Color;
+import android.text.Spanned;
+import android.text.TextUtils;
+import android.util.Log;
+
 import androidx.annotation.NonNull;
+import androidx.core.content.res.ResourcesCompat;
+
+import com.yydcdut.markdown.MarkdownConfiguration;
+import com.yydcdut.markdown.MarkdownConfiguration.Builder;
+import com.yydcdut.markdown.MarkdownProcessor;
+import com.yydcdut.markdown.span.MDImageSpan;
+import com.yydcdut.markdown.theme.ThemeDefault;
+import com.yydcdut.markdown.theme.ThemeSonsOfObsidian;
+
+import it.niedermann.owncloud.notes.R;
 
 /**
  * Created by stefan on 07.12.16.
@@ -8,6 +24,8 @@ import androidx.annotation.NonNull;
 
 @SuppressWarnings("WeakerAccess")
 public class MarkDownUtil {
+
+    private static final String TAG = MarkDownUtil.class.getCanonicalName();
 
     public static final String CHECKBOX_UNCHECKED_MINUS = "- [ ]";
     public static final String CHECKBOX_UNCHECKED_MINUS_TRAILING_SPACE = CHECKBOX_UNCHECKED_MINUS + " ";
@@ -67,6 +85,14 @@ public class MarkDownUtil {
             startOfLine--;
         }
         return startOfLine;
+    }
+
+    public static int getEndOfLine(@NonNull CharSequence s, int cursorPosition) {
+        int nextLinebreak = s.toString().indexOf('\n', cursorPosition);
+        if (nextLinebreak > -1) {
+            return nextLinebreak;
+        }
+        return cursorPosition;
     }
 }
 

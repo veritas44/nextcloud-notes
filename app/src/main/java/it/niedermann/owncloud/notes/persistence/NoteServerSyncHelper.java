@@ -1,39 +1,28 @@
 package it.niedermann.owncloud.notes.persistence;
 
+import android.accounts.NetworkErrorException;
 import android.content.BroadcastReceiver;
-import android.content.ClipData;
-import android.content.ClipboardManager;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
-import android.graphics.Typeface;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.AsyncTask;
-import android.preference.PreferenceManager;
 import android.util.Log;
 import android.view.View;
-import android.widget.TextView;
-import android.widget.Toast;
 
 import androidx.annotation.NonNull;
-import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.preference.PreferenceManager;
 
 import com.google.android.material.snackbar.Snackbar;
-import com.nextcloud.android.sso.exceptions.NextcloudApiNotRespondingException;
 import com.nextcloud.android.sso.exceptions.NextcloudFilesAppAccountNotFoundException;
-import com.nextcloud.android.sso.exceptions.NextcloudFilesAppNotSupportedException;
 import com.nextcloud.android.sso.exceptions.NextcloudHttpRequestFailedException;
 import com.nextcloud.android.sso.exceptions.NoCurrentAccountSelectedException;
 import com.nextcloud.android.sso.helper.SingleAccountHelper;
 import com.nextcloud.android.sso.model.SingleSignOnAccount;
 
-import org.json.JSONException;
-
-import java.net.ConnectException;
-import java.net.SocketTimeoutException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -42,19 +31,17 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 
-import it.niedermann.nextcloud.exception.ExceptionUtil;
 import it.niedermann.owncloud.notes.R;
+import it.niedermann.owncloud.notes.android.fragment.ExceptionDialogFragment;
 import it.niedermann.owncloud.notes.model.CloudNote;
 import it.niedermann.owncloud.notes.model.DBNote;
 import it.niedermann.owncloud.notes.model.DBStatus;
 import it.niedermann.owncloud.notes.model.ISyncCallback;
 import it.niedermann.owncloud.notes.model.LocalAccount;
-import it.niedermann.owncloud.notes.model.LoginStatus;
 import it.niedermann.owncloud.notes.model.SyncResultStatus;
 import it.niedermann.owncloud.notes.util.SSOUtil;
 import it.niedermann.owncloud.notes.util.ServerResponse;
 
-import static android.content.Context.CLIPBOARD_SERVICE;
 import static java.net.HttpURLConnection.HTTP_NOT_FOUND;
 import static java.net.HttpURLConnection.HTTP_NOT_MODIFIED;
 
@@ -225,10 +212,15 @@ public class NoteServerSyncHelper {
             if (syncActive.get(ssoAccount.name) == null) {
                 syncActive.put(ssoAccount.name, false);
             }
-            Log.d(TAG, "Sync requested (" + (onlyLocalChanges ? "onlyLocalChanges" : "full") + "; " + (syncActive.get(ssoAccount.name) ? "sync active" : "sync NOT active") + ") ...");
-            if (isSyncPossible() && (!syncActive.get(ssoAccount.name) || onlyLocalChanges)) {
+            Log.d(TAG, "Sync requested (" + (onlyLocalChanges ? "onlyLocalChanges" : "full") + "; " + (Boolean.TRUE.equals(syncActive.get(ssoAccount.name)) ? "sync active" : "sync NOT active") + ") ...");
+            if (isSyncPossible() && (!Boolean.TRUE.equals(syncActive.get(ssoAccount.name)) || onlyLocalChanges)) {
                 Log.d(TAG, "... starting now");
-                SyncTask syncTask = new SyncTask(db.getLocalAccountByAccountName(ssoAccount.name), ssoAccount, onlyLocalChanges);
+                final LocalAccount account = db.getLocalAccountByAccountName(ssoAccount.name);
+                if (account == null) {
+                    Log.e(TAG, "LocalAccount for ssoAccount \"" + ssoAccount.name + "\" is null. Cannot synchronize.", new IllegalStateException());
+                    return;
+                }
+                SyncTask syncTask = new SyncTask(account, ssoAccount, onlyLocalChanges);
                 syncTask.addCallbacks(ssoAccount, callbacksPush.get(ssoAccount.name));
                 callbacksPush.put(ssoAccount.name, new ArrayList<>());
                 if (!onlyLocalChanges) {
@@ -240,15 +232,25 @@ public class NoteServerSyncHelper {
                 Log.d(TAG, "... scheduled");
                 syncScheduled.put(ssoAccount.name, true);
                 if (callbacksPush.containsKey(ssoAccount.name) && callbacksPush.get(ssoAccount.name) != null) {
-                    for (ISyncCallback callback : callbacksPush.get(ssoAccount.name)) {
-                        callback.onScheduled();
+                    final List<ISyncCallback> callbacks = callbacksPush.get(ssoAccount.name);
+                    if (callbacks != null) {
+                        for (ISyncCallback callback : callbacks) {
+                            callback.onScheduled();
+                        }
+                    } else {
+                        Log.w(TAG, "List of push-callbacks was set for account \"" + ssoAccount.name + "\" but it was null");
                     }
                 }
             } else {
                 Log.d(TAG, "... do nothing");
                 if (callbacksPush.containsKey(ssoAccount.name) && callbacksPush.get(ssoAccount.name) != null) {
-                    for (ISyncCallback callback : callbacksPush.get(ssoAccount.name)) {
-                        callback.onScheduled();
+                    final List<ISyncCallback> callbacks = callbacksPush.get(ssoAccount.name);
+                    if (callbacks != null) {
+                        for (ISyncCallback callback : callbacks) {
+                            callback.onScheduled();
+                        }
+                    } else {
+                        Log.w(TAG, "List of push-callbacks was set for account \"" + ssoAccount.name + "\" but it was null");
                     }
                 }
             }
@@ -256,25 +258,44 @@ public class NoteServerSyncHelper {
     }
 
     private void updateNetworkStatus() {
-        ConnectivityManager connMgr = (ConnectivityManager) context.getApplicationContext().getSystemService(Context.CONNECTIVITY_SERVICE);
-        NetworkInfo activeInfo = connMgr.getActiveNetworkInfo();
+        try {
+            ConnectivityManager connMgr = (ConnectivityManager) context.getApplicationContext().getSystemService(Context.CONNECTIVITY_SERVICE);
 
-        if (activeInfo != null && activeInfo.isConnected()) {
-            networkConnected = true;
-            isSyncPossible =
-                    !syncOnlyOnWifi || ((ConnectivityManager) context.getApplicationContext()
-                            .getSystemService(Context.CONNECTIVITY_SERVICE))
-                            .getNetworkInfo(ConnectivityManager.TYPE_WIFI).isConnected();
-
-            if (isSyncPossible) {
-                Log.d(TAG, "Network connection established.");
-            } else {
-                Log.d(TAG, "Network connected, but not used because only synced on wifi.");
+            if (connMgr == null) {
+                throw new NetworkErrorException("ConnectivityManager is null");
             }
-        } else {
+
+            NetworkInfo activeInfo = connMgr.getActiveNetworkInfo();
+
+            if (activeInfo == null) {
+                throw new NetworkErrorException("NetworkInfo is null");
+            }
+
+            if (activeInfo.isConnected()) {
+                networkConnected = true;
+
+                NetworkInfo networkInfo = connMgr.getNetworkInfo((ConnectivityManager.TYPE_WIFI));
+
+                if (networkInfo == null) {
+                    throw new NetworkErrorException("connMgr.getNetworkInfo(ConnectivityManager.TYPE_WIFI) is null");
+                }
+
+                isSyncPossible = !syncOnlyOnWifi || networkInfo.isConnected();
+
+                if (isSyncPossible) {
+                    Log.d(TAG, "Network connection established.");
+                } else {
+                    Log.d(TAG, "Network connected, but not used because only synced on wifi.");
+                }
+            } else {
+                networkConnected = false;
+                isSyncPossible = false;
+                Log.d(TAG, "No network connection.");
+            }
+        } catch (NetworkErrorException e) {
+            e.printStackTrace();
             networkConnected = false;
             isSyncPossible = false;
-            Log.d(TAG, "No network connection.");
         }
     }
 
@@ -283,11 +304,14 @@ public class NoteServerSyncHelper {
      * Synchronization consists of two parts: pushLocalChanges and pullRemoteChanges.
      */
     private class SyncTask extends AsyncTask<Void, Void, SyncResultStatus> {
+        @NonNull
         private final LocalAccount localAccount;
         private final SingleSignOnAccount ssoAccount;
         private final boolean onlyLocalChanges;
-        @NonNull private final Map<String, List<ISyncCallback>> callbacks = new HashMap<>();
-        @NonNull private final List<Throwable> exceptions = new ArrayList<>();
+        @NonNull
+        private final Map<String, List<ISyncCallback>> callbacks = new HashMap<>();
+        @NonNull
+        private final ArrayList<Throwable> exceptions = new ArrayList<>();
 
         SyncTask(@NonNull LocalAccount localAccount, @NonNull SingleSignOnAccount ssoAccount, boolean onlyLocalChanges) {
             this.localAccount = localAccount;
@@ -305,7 +329,7 @@ public class NoteServerSyncHelper {
             if (!syncScheduled.containsKey(ssoAccount.name) || syncScheduled.get(ssoAccount.name) == null) {
                 syncScheduled.put(ssoAccount.name, false);
             }
-            if (!onlyLocalChanges && syncScheduled.get(ssoAccount.name)) {
+            if (!onlyLocalChanges && Boolean.TRUE.equals(syncScheduled.get(ssoAccount.name))) {
                 syncScheduled.put(ssoAccount.name, false);
             }
             syncActive.put(ssoAccount.name, true);
@@ -314,13 +338,11 @@ public class NoteServerSyncHelper {
         @Override
         protected SyncResultStatus doInBackground(Void... voids) {
             Log.i(TAG, "STARTING SYNCHRONIZATION");
-            //db.debugPrintFullDB();
-            SyncResultStatus status = new SyncResultStatus();
-            status.pushStatus = pushLocalChanges();
+            final SyncResultStatus status = new SyncResultStatus();
+            status.pushSuccessful = pushLocalChanges();
             if (!onlyLocalChanges) {
-                status.pullStatus = pullRemoteChanges();
+                status.pullSuccessful = pullRemoteChanges();
             }
-            //db.debugPrintFullDB();
             Log.i(TAG, "SYNCHRONIZATION FINISHED");
             return status;
         }
@@ -328,12 +350,10 @@ public class NoteServerSyncHelper {
         /**
          * Push local changes: for each locally created/edited/deleted Note, use NotesClient in order to push the changed to the server.
          */
-        private LoginStatus pushLocalChanges() {
-            if (localAccount == null) {
-                return LoginStatus.NO_NETWORK;
-            }
+        private boolean pushLocalChanges() {
             Log.d(TAG, "pushLocalChanges()");
-            LoginStatus status = LoginStatus.OK;
+
+            boolean success = true;
             List<DBNote> notes = db.getLocalModifiedNotes(localAccount.getId());
             for (DBNote note : notes) {
                 Log.d(TAG, "   Process Local Note: " + note);
@@ -366,8 +386,8 @@ public class NoteServerSyncHelper {
                                 Log.v(TAG, "   ...delete (from server and local)");
                                 try {
                                     notesClient.deleteNote(ssoAccount, note.getRemoteId());
-                                } catch(NextcloudHttpRequestFailedException e) {
-                                    if(e.getStatusCode() == HTTP_NOT_FOUND) {
+                                } catch (NextcloudHttpRequestFailedException e) {
+                                    if (e.getStatusCode() == HTTP_NOT_FOUND) {
                                         Log.v(TAG, "   ...delete (note has already been deleted remotely)");
                                     } else {
                                         throw e;
@@ -385,29 +405,22 @@ public class NoteServerSyncHelper {
                 } catch (NextcloudHttpRequestFailedException e) {
                     if (e.getStatusCode() == HTTP_NOT_MODIFIED) {
                         Log.d(TAG, "Server returned HTTP Status Code 304 - Not Modified");
-                    } else if (e.getStatusCode() == 507) {
-                        exceptions.add(e);
-                        Log.d(TAG, "Server returned HTTP Status Code 507 - Insufficient Storage");
-                        status = LoginStatus.INSUFFICIENT_STORAGE;
                     } else {
                         exceptions.add(e);
-                        status = LoginStatus.JSON_FAILED;
+                        success = false;
                     }
                 } catch (Exception e) {
                     exceptions.add(e);
-                    status = LoginStatus.UNKNOWN_PROBLEM;
+                    success = false;
                 }
             }
-            return status;
+            return success;
         }
 
         /**
          * Pull remote Changes: update or create each remote note (if local pendant has no changes) and remove remotely deleted notes.
          */
-        private LoginStatus pullRemoteChanges() {
-            if (localAccount == null) {
-                return LoginStatus.NO_NETWORK;
-            }
+        private boolean pullRemoteChanges() {
             Log.d(TAG, "pullRemoteChanges() for account " + localAccount.getAccountName());
             try {
                 Map<Long, Long> idMap = db.getIdMap(localAccount.getId());
@@ -422,7 +435,12 @@ public class NoteServerSyncHelper {
                         Log.v(TAG, "   ... unchanged");
                     } else if (idMap.containsKey(remoteNote.getRemoteId())) {
                         Log.v(TAG, "   ... found -> Update");
-                        db.updateNote(idMap.get(remoteNote.getRemoteId()), remoteNote, null);
+                        Long remoteId = idMap.get(remoteNote.getRemoteId());
+                        if (remoteId != null) {
+                            db.updateNote(remoteId, remoteNote, null);
+                        } else {
+                            Log.e(TAG, "Tried to update note from server, but remoteId of note is null. " + remoteNote);
+                        }
                     } else {
                         Log.v(TAG, "   ... create");
                         db.addNote(localAccount.getId(), remoteNote);
@@ -442,30 +460,18 @@ public class NoteServerSyncHelper {
                 localAccount.setModified(response.getLastModified());
                 db.updateETag(localAccount.getId(), localAccount.getEtag());
                 db.updateModified(localAccount.getId(), localAccount.getModified());
-                return LoginStatus.OK;
-            } catch (JSONException | NullPointerException e) {
-                exceptions.add(e);
-                return LoginStatus.JSON_FAILED;
+                return true;
             } catch (NextcloudHttpRequestFailedException e) {
                 Log.d(TAG, "Server returned HTTP Status Code " + e.getStatusCode() + " - " + e.getMessage());
-                if (e.getStatusCode() == 304) {
-                    return LoginStatus.OK;
+                if (e.getStatusCode() == HTTP_NOT_MODIFIED) {
+                    return true;
                 } else {
                     exceptions.add(e);
-                    return LoginStatus.JSON_FAILED;
+                    return false;
                 }
-            } catch (NextcloudFilesAppNotSupportedException e) {
-                exceptions.add(e);
-                return LoginStatus.FILES_APP_VERSION_TOO_OLD;
-            } catch (NextcloudApiNotRespondingException e) {
-                exceptions.add(e);
-                return LoginStatus.PROBLEM_WITH_FILES_APP;
-            } catch (SocketTimeoutException | ConnectException e) {
-                exceptions.add(e);
-                return LoginStatus.NO_NETWORK;
             } catch (Exception e) {
                 exceptions.add(e);
-                return LoginStatus.UNKNOWN_PROBLEM;
+                return false;
             }
         }
 
@@ -475,52 +481,25 @@ public class NoteServerSyncHelper {
             for (Throwable e : exceptions) {
                 Log.e(TAG, e.getMessage(), e);
             }
-            if (status.pullStatus != LoginStatus.OK || status.pushStatus != LoginStatus.OK) {
-                String statusMessage = context.getApplicationContext().getString(R.string.error_sync, context.getApplicationContext().getString(
-                        // Since we can only display one snackbar at a time, let's first fix the pullStatus errors.
-                        status.pushStatus == LoginStatus.OK
-                                ? status.pullStatus.str
-                                : status.pushStatus.str
-                        )
-                );
+            if (!status.pullSuccessful || !status.pushSuccessful) {
                 if (context instanceof ViewProvider && context instanceof AppCompatActivity) {
-                    Snackbar.make(((ViewProvider) context).getView(), statusMessage, Snackbar.LENGTH_LONG)
-                            .setAction(R.string.simple_more, v -> {
-                                String debugInfos = ExceptionUtil.getDebugInfos((AppCompatActivity) context, exceptions);
-                                AlertDialog dialog = new AlertDialog.Builder(context)
-                                        .setTitle(statusMessage)
-                                        .setMessage(debugInfos)
-                                        .setPositiveButton(android.R.string.copy, (a, b) -> {
-                                            final ClipboardManager clipboardManager = (ClipboardManager) context.getSystemService(CLIPBOARD_SERVICE);
-                                            ClipData clipData = ClipData.newPlainText(context.getString(R.string.simple_exception), "```\n" + debugInfos + "\n```");
-                                            clipboardManager.setPrimaryClip(clipData);
-                                            Toast.makeText(context, R.string.copied_to_clipboard, Toast.LENGTH_SHORT).show();
-                                            a.dismiss();
-                                        })
-                                        .setNegativeButton(R.string.simple_close, null)
-                                        .create();
-                                dialog.show();
-                                ((TextView) dialog.findViewById(android.R.id.message)).setTypeface(Typeface.MONOSPACE);
-                            })
+                    Snackbar.make(((ViewProvider) context).getView(), R.string.error_synchronization, Snackbar.LENGTH_LONG)
+                            .setAction(R.string.simple_more, v -> ExceptionDialogFragment.newInstance(exceptions)
+                                    .show(((AppCompatActivity) context).getSupportFragmentManager(), ExceptionDialogFragment.class.getCanonicalName()))
                             .show();
-                } else {
-                    Toast.makeText(context.getApplicationContext(), statusMessage, Toast.LENGTH_LONG).show();
-                    for (Throwable e : exceptions) {
-                        Toast.makeText(context.getApplicationContext(), e.getClass().getName() + ": " + e.getMessage(), Toast.LENGTH_LONG).show();
-                    }
                 }
             }
             syncActive.put(ssoAccount.name, false);
             // notify callbacks
             if (callbacks.containsKey(ssoAccount.name) && callbacks.get(ssoAccount.name) != null) {
-                for (ISyncCallback callback : callbacks.get(ssoAccount.name)) {
+                for (ISyncCallback callback : Objects.requireNonNull(callbacks.get(ssoAccount.name))) {
                     callback.onFinish();
                 }
             }
             db.notifyNotesChanged();
             db.updateDynamicShortcuts(localAccount.getId());
             // start next sync if scheduled meanwhile
-            if (syncScheduled.containsKey(ssoAccount.name) && syncScheduled.get(ssoAccount.name) != null && syncScheduled.get(ssoAccount.name)) {
+            if (syncScheduled.containsKey(ssoAccount.name) && syncScheduled.get(ssoAccount.name) != null && Boolean.TRUE.equals(syncScheduled.get(ssoAccount.name))) {
                 scheduleSync(ssoAccount, false);
             }
         }

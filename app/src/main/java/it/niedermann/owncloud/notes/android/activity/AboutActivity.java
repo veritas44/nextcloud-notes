@@ -3,24 +3,22 @@ package it.niedermann.owncloud.notes.android.activity;
 import android.os.Bundle;
 
 import androidx.annotation.NonNull;
-import androidx.appcompat.app.AppCompatActivity;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentPagerAdapter;
 
-import it.niedermann.nextcloud.exception.ExceptionHandler;
 import it.niedermann.owncloud.notes.R;
 import it.niedermann.owncloud.notes.android.fragment.about.AboutFragmentContributingTab;
 import it.niedermann.owncloud.notes.android.fragment.about.AboutFragmentCreditsTab;
 import it.niedermann.owncloud.notes.android.fragment.about.AboutFragmentLicenseTab;
 import it.niedermann.owncloud.notes.databinding.ActivityAboutBinding;
 
-public class AboutActivity extends AppCompatActivity {
+public class AboutActivity extends LockedActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        Thread.currentThread().setUncaughtExceptionHandler(new ExceptionHandler(this));
+
         ActivityAboutBinding binding = ActivityAboutBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
 
