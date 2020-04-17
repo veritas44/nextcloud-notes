@@ -796,13 +796,13 @@ public class NotesListViewActivity extends LockedActivity implements ItemAdapter
                 Log.d(TAG, "Network is connected, but sync is not possible");
             } else {
                 StringBuilder debugMessage = new StringBuilder();
-                for(String messages : NoteServerSyncHelper.LOG_MESSAGES) {
+                for (String messages : NoteServerSyncHelper.LOG_MESSAGES) {
                     debugMessage.append(messages).append("\n");
                 }
                 debugMessage
                         .append("\n\n==========================\n\n")
                         .append("Sync only on wifi: ").append(PreferenceManager.getDefaultSharedPreferences(getApplicationContext()).getBoolean(getApplicationContext().getResources().getString(R.string.pref_key_wifi_only), false))
-                        ;
+                ;
 
                 try {
 
@@ -821,6 +821,7 @@ public class NotesListViewActivity extends LockedActivity implements ItemAdapter
                 new AlertDialog.Builder(this)
                         .setTitle("TEST-DIALOG " + getString(R.string.error_sync, getString(R.string.error_no_network)))
                         .setMessage(debugMessage)
+                        .setNegativeButton(android.R.string.cancel, (v, w) -> v.dismiss())
                         .setPositiveButton(android.R.string.copy, (v, w) -> ClipboardUtil.copyToClipboard(this, "```\n" + debugMessage + "\n```\n"))
                         .create()
                         .show();
