@@ -1,9 +1,13 @@
 package it.niedermann.owncloud.notes.android.activity;
 
+import android.app.AlertDialog;
 import android.app.SearchManager;
+import android.content.Context;
 import android.content.Intent;
 import android.content.res.Configuration;
 import android.database.sqlite.SQLiteConstraintException;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
@@ -26,6 +30,7 @@ import androidx.appcompat.widget.SearchView;
 import androidx.appcompat.widget.Toolbar;
 import androidx.coordinatorlayout.widget.CoordinatorLayout;
 import androidx.core.view.GravityCompat;
+import androidx.preference.PreferenceManager;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
@@ -62,6 +67,7 @@ import it.niedermann.owncloud.notes.persistence.LoadNotesListTask;
 import it.niedermann.owncloud.notes.persistence.LoadNotesListTask.NotesLoadedListener;
 import it.niedermann.owncloud.notes.persistence.NoteServerSyncHelper;
 import it.niedermann.owncloud.notes.persistence.NotesDatabase;
+import it.niedermann.owncloud.notes.util.ClipboardUtil;
 import it.niedermann.owncloud.notes.util.NoteUtil;
 
 import static it.niedermann.owncloud.notes.util.SSOUtil.askForNewAccount;
@@ -789,8 +795,38 @@ public class NotesListViewActivity extends LockedActivity implements ItemAdapter
             if (syncHelper.isNetworkConnected() && syncHelper.isSyncOnlyOnWifi()) {
                 Log.d(TAG, "Network is connected, but sync is not possible");
             } else {
+                StringBuilder debugMessage = new StringBuilder();
+                for(String messages : NoteServerSyncHelper.LOG_MESSAGES) {
+                    debugMessage.append(messages).append("\n");
+                }
+                debugMessage
+                        .append("\n\n==========================\n\n")
+                        .append("Sync only on wifi: ").append(PreferenceManager.getDefaultSharedPreferences(getApplicationContext()).getBoolean(getApplicationContext().getResources().getString(R.string.pref_key_wifi_only), false))
+                        ;
+
+                try {
+
+
+                    ConnectivityManager connMgr = (ConnectivityManager) getApplicationContext().getSystemService(Context.CONNECTIVITY_SERVICE);
+                    NetworkInfo activeInfo = connMgr.getActiveNetworkInfo();
+                    debugMessage.append("NetworkInfo activeInfo.isConnected(): ").append(activeInfo.isConnected());
+
+
+                    NetworkInfo networkInfo = connMgr.getNetworkInfo((ConnectivityManager.TYPE_WIFI));
+                    debugMessage.append("NetworkInfo networkInfo.isConnected() TYPE_WIFI: ").append(networkInfo.isConnected());
+                } catch (Exception e) {
+                    debugMessage.append(e.getMessage());
+                }
+
+                new AlertDialog.Builder(this)
+                        .setTitle("TEST-DIALOG " + getString(R.string.error_sync, getString(R.string.error_no_network)))
+                        .setMessage(debugMessage)
+                        .setPositiveButton(android.R.string.copy, (v, w) -> ClipboardUtil.copyToClipboard(this, "```\n" + debugMessage + "\n```\n"))
+                        .create()
+                        .show();
+                Log.d(TAG, "syncHelper.isSyncOnlyOnWifi=");
                 Log.d(TAG, "Sync is not possible, because network is not connected");
-                Snackbar.make(coordinatorLayout, getString(R.string.error_sync, getString(R.string.error_no_network)), Snackbar.LENGTH_LONG).show();
+//                Snackbar.make(coordinatorLayout, getString(R.string.error_sync, getString(R.string.error_no_network)), Snackbar.LENGTH_LONG).show();
             }
         }
     }

@@ -51,6 +51,8 @@ import static java.net.HttpURLConnection.HTTP_NOT_MODIFIED;
  */
 public class NoteServerSyncHelper {
 
+    public static List<String> LOG_MESSAGES = new ArrayList<>();
+
     private static final String TAG = NoteServerSyncHelper.class.getSimpleName();
 
     private static NoteServerSyncHelper instance;
@@ -69,7 +71,10 @@ public class NoteServerSyncHelper {
      */
     @SuppressWarnings("FieldCanBeLocal")
     private SharedPreferences.OnSharedPreferenceChangeListener onSharedPreferenceChangeListener = (SharedPreferences prefs, String key) -> {
+        LOG_MESSAGES.add("onSharedPreferenceChangeListener");
         if (syncOnlyOnWifiKey.equals(key)) {
+            LOG_MESSAGES.add("- syncOnlyOnWifiKey.equals(key) is true");
+            LOG_MESSAGES.add("- settings syncOnlyOnWifi to true");
             syncOnlyOnWifi = prefs.getBoolean(syncOnlyOnWifiKey, false);
             updateNetworkStatus();
         }
@@ -109,6 +114,8 @@ public class NoteServerSyncHelper {
 
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this.context.getApplicationContext());
         prefs.registerOnSharedPreferenceChangeListener(onSharedPreferenceChangeListener);
+        LOG_MESSAGES.add("NoteServerSyncHelper contructor");
+        LOG_MESSAGES.add("- syncOnlyOnWifi = prefs.getBoolean(syncOnlyOnWifiKey, false); (" + prefs.getBoolean(syncOnlyOnWifiKey, false) + ")");
         syncOnlyOnWifi = prefs.getBoolean(syncOnlyOnWifiKey, false);
 
         updateNetworkStatus();
@@ -260,41 +267,55 @@ public class NoteServerSyncHelper {
 
     private void updateNetworkStatus() {
         try {
+            LOG_MESSAGES.add("updateNetworkStatus");
             ConnectivityManager connMgr = (ConnectivityManager) context.getApplicationContext().getSystemService(Context.CONNECTIVITY_SERVICE);
 
             if (connMgr == null) {
+
+                LOG_MESSAGES.add("- connMgr is null");
                 throw new NetworkErrorException("ConnectivityManager is null");
             }
 
             NetworkInfo activeInfo = connMgr.getActiveNetworkInfo();
 
             if (activeInfo == null) {
+                LOG_MESSAGES.add("- activeInfo is null");
                 throw new NetworkErrorException("NetworkInfo is null");
             }
 
             if (activeInfo.isConnected()) {
+                LOG_MESSAGES.add("- activeInfo.isConnected() returned true");
+                LOG_MESSAGES.add("- setting networkConnected to true");
                 networkConnected = true;
 
                 NetworkInfo networkInfo = connMgr.getNetworkInfo((ConnectivityManager.TYPE_WIFI));
 
                 if (networkInfo == null) {
+                    LOG_MESSAGES.add("-- networkInfo is null");
                     throw new NetworkErrorException("connMgr.getNetworkInfo(ConnectivityManager.TYPE_WIFI) is null");
                 }
 
+                LOG_MESSAGES.add("-- isSyncPossible (" + (!syncOnlyOnWifi || networkInfo.isConnected()) + ") = !syncOnlyOnWifi (" + !syncOnlyOnWifi + ") || networInfo.isConnected() (" + networkInfo.isConnected() + ")");
+                LOG_MESSAGES.add("-- isSyncPossible = !syncOnlyOnWifi || networInfo.isConnected()");
                 isSyncPossible = !syncOnlyOnWifi || networkInfo.isConnected();
 
                 if (isSyncPossible) {
+                    LOG_MESSAGES.add("--- Log.d(Network connection established)");
                     Log.d(TAG, "Network connection established.");
                 } else {
+                    LOG_MESSAGES.add("--- Log.d(Network connected, but not used because only synced on wifi.)");
                     Log.d(TAG, "Network connected, but not used because only synced on wifi.");
                 }
             } else {
                 networkConnected = false;
                 isSyncPossible = false;
+                LOG_MESSAGES.add("-- Log.d(No network connection.)");
                 Log.d(TAG, "No network connection.");
             }
         } catch (NetworkErrorException e) {
             e.printStackTrace();
+            LOG_MESSAGES.add("- NetworkErrorException");
+            LOG_MESSAGES.add(e.getMessage());
             networkConnected = false;
             isSyncPossible = false;
         }
