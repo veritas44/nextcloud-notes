@@ -1,4 +1,4 @@
-# Nextcloud Notes
+# Nextcloud Notes for Android
 An android client for [Nextcloud Notes App](https://github.com/nextcloud/notes/).
 
 [![Android CI](https://github.com/stefan-niedermann/nextcloud-notes/workflows/Android%20CI/badge.svg)](https://github.com/stefan-niedermann/nextcloud-notes/actions)
@@ -27,9 +27,9 @@ An android client for [Nextcloud Notes App](https://github.com/nextcloud/notes/)
 
 ## :eyes: Screenshots
 
-| Navi | List View | Edit Mode |
+| List View | Edit Mode | Preview |
 | :--: | :--: | :--: |
-| ![Screenshot of categories in sidebar](/fastlane/metadata/android/en-US/images/phoneScreenshots/5.png) | ![Screenshot of list view](/fastlane/metadata/android/en-US/images/phoneScreenshots/1.png) | ![Screenshot of edit view](/fastlane/metadata/android/en-US/images/phoneScreenshots/2.png) |
+| ![Screenshot of list view](/fastlane/metadata/android/en-US/images/phoneScreenshots/2.png) | ![Screenshot of edit mode](/fastlane/metadata/android/en-US/images/phoneScreenshots/3.png) | ![Screenshot of preview](/fastlane/metadata/android/en-US/images/phoneScreenshots/4.png) |
 
 ## :rocket: Features
   * Multiple accounts
@@ -39,6 +39,7 @@ An android client for [Nextcloud Notes App](https://github.com/nextcloud/notes/)
   * Mark notes as favorite
   * Bulk delete
   * In-note search
+  * Single note widget and note list widget
   * Render MarkDown (using [RxMarkdown](https://github.com/yydcdut/RxMarkdown))
   * Translated in many languages on [Transifex](https://www.transifex.com/nextcloud/nextcloud/android-notes/)
   * Context based formatting ([#363](https://github.com/stefan-niedermann/nextcloud-notes/issues/363))
@@ -51,7 +52,7 @@ An android client for [Nextcloud Notes App](https://github.com/nextcloud/notes/)
 ## :family: Join the team
   * Test the app with different devices
   * Report issues in the [issue tracker](https://github.com/stefan-niedermann/nextcloud-notes/issues)
-  * [Pick a good first issue](https://github.com/nextcloud/server/labels/good%20first%20issue) :notebook:
+  * [Pick a good first issue](https://github.com/stefan-niedermann/nextcloud-notes/labels/Good%20first%20issue) :notebook:
   * Create a [Pull Request](https://opensource.guide/how-to-contribute/#opening-a-pull-request)
   * Help translating this app on [Transifex](https://www.transifex.com/nextcloud/nextcloud/android-notes/) 🌎
   * Buy this app on [Google Play Store](https://play.google.com/store/apps/details?id=it.niedermann.owncloud.notes)
@@ -59,7 +60,7 @@ An android client for [Nextcloud Notes App](https://github.com/nextcloud/notes/)
 
 ## :link: Requirements
   * [Nextcloud](https://nextcloud.com/) instance running
-  * [Nextcloud Files](https://github.com/nextcloud/android) app enabled (> 3.9.0)
+  * [Nextcloud Android](https://github.com/nextcloud/android) app installed (> 3.9.0)
   * [Nextcloud Notes](https://github.com/nextcloud/notes) app enabled
 
 ## :notebook: License

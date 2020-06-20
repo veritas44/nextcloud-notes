@@ -19,14 +19,15 @@
     <string name="action_note_deleted">Verwijderd %1$s</string>
     <string name="action_note_restored">Hersteld %1$s</string>
     <string name="action_undo">Ongedaan maken</string>
-    <string name="action_drawer_open">open navigatie</string>
-    <string name="action_drawer_close">sluit navigatie</string>
     <string name="action_uncategorized">Niet gecategoriseerd</string>
     <string name="menu_delete">Verwijderen</string>
     <string name="menu_change_category">Categorie</string>
     <string name="menu_favorite">Favoriet</string>
     <string name="menu_preview">Voorbeeldweergave</string>
     <string name="menu_share">Delen</string>
+
+    <string name="search_in_category">Zoeken in %1$s</string>
+    <string name="search_in_all">Zoek in alle notities</string>
 
     <string name="change_category_title">Kies een categorie
 </string>
@@ -51,10 +52,9 @@
 
     <!-- Error -->
     <string name="error_sync">Synchronisatie mislukt: %1$s</string>
+    <string name="error_synchronization">Synchronisatie mislukt</string>
     <string name="error_json">is de Notities app op de server geactiveerd?</string>
     <string name="error_no_network">Geen netwerkverbinding</string>
-    <string name="error_files_app">Heb je de Bestanden app geïnstalleerd?</string>
-    <string name="error_insufficient_storage">De serveropslag is vol.</string>
     <string name="error_unknown">Er trad een onbekende fout op.</string>
 
     <!-- About -->
@@ -118,7 +118,6 @@
     <string name="could_not_load_preview_two_digit_numbered_list">Kon geen voorbeeld laden. Controleer of er een lege genummerde lijst is met twee cijfers is.</string>
     <string name="simple_more">Meer</string>
     <string name="simple_move">Verplaatsen</string>
-    <string name="error_files_app_version_too_old">Is je Bestanden app versie up-to-date?</string>
     <string name="checkbox_could_not_be_toggled">Keuzevakje kon niet worden omgeschakeld.</string>
     <string name="bulk_notes_deleted">Verwijderde %1$d notities</string>
     <string name="bulk_notes_restored">Herstelde %1$d notities</string>
@@ -128,6 +127,36 @@
     <string name="simple_checkbox">Aanvinkvakje</string>
     <string name="unlock_notes">Ontgrendel notities</string>
     <string name="simple_beta">Bèta</string>
+    <string name="could_not_copy_to_clipboard">Kon niet kopiëren naar het klembord</string>
+    <string name="error_dialog_title">Oh nee - wat nu? 🙁</string>
+    <string name="error_dialog_tip_token_mismatch_retry">Probeer de app te sluiten en opnieuw te starten. Er was misschien een onjuiste verbinding met de Nextcloud-app.</string>
+    <string name="error_dialog_tip_token_mismatch_clear_storage">Als het probleem blijft aanhouden, probeer dan de gegevensopslag van beide apps te wissen: van Nextcloud én van Nextcloud Notes.</string>
+    <string name="error_dialog_tip_clear_storage">Je kan de gegevensopslag wissen door in Android te gaan naar Instellingen → Apps → Nextcloud / Nextcloud Notes → Geheugen → Ruimte beheren → Gegevens verwijderen</string>
+    <string name="error_dialog_tip_files_outdated">Je Nextcloud app lijkt te zijn verouderd. Download alstublieft de nieuwste versie in de Google Play Store of in F-Droid.</string>
+    <string name="error_dialog_tip_files_force_stop">Er lijkt iets mis te zijn met je Nextcloud app. Probeer alstublieft de apps geforceerd af te sluiten, zowel de Nextcloud app als de Nextcloud Notes app.</string>
+    <string name="error_dialog_tip_files_delete_storage">Als geforceerd afsluiten niet helpt, probeer dan van beide apps de gegevensopslag te wissen.</string>
+    <string name="error_dialog_timeout_instance">Er was binnen de gestelde tijd geen reactie ontvangen van je server. Controleer alstublieft of je Nextcloud-instantie wel goed loopt.</string>
+    <string name="error_dialog_timeout_toggle">Controleer je netwerk verbinding. Het kan ook helpen de dataverbinding of WIFI uit en weer aan te zetten.</string>
+    <string name="error_dialog_check_server">Je server gaf een onjuiste reactie. Controleer alstublieft of de Notes app in de web-interface wel goed werkt.</string>
+    <string name="error_dialog_check_server_logs">Er is iets mis met je Nextcloud instellingen. Controleer alstublieft de server log bestanden.</string>
+    <string name="error_dialog_check_maintenance">Controleer alstublieft of je Nextcloud instantie momenteel niet in onderhouds-modus draait.</string>
+    <string name="error_dialog_insufficient_storage">Je Nextcloud instantie heeft geen vrije ruimte meer. Verwijder alstublieft enkele bestanden om je lokale gegevens te kunnen synchroniseren.</string>
+    <string name="error_dialog_contact_us">Schroom alstublieft niet om contact met ons op te nemen als het probleem blijft aanhouden. Onze contactgegevens zijn te vinden in de About sectie in de zijbalk.</string>
+    <string name="error_dialog_we_need_info">We hebben de volgende technische informatie nodig om je te kunnen helpen: </string>
+    <string name="error_dialog_server_app_enabled">Zorg er alstublieft voor dat je de \"Notes\" app hebt geïnstalleerd en aangezet op jouw server.</string>
+    <string name="error_dialog_redirect">Je server heeft gereageerd met een HTTP 302-statuscode, wat inhoudt dat je de Deck-app niet op je server hebt geïnstalleerd of dat er iets verkeerd is geconfigureerd. Dit kan worden veroorzaakt door maatwerk aanpassingen in een .htaccess-bestand of door Nextcloud-apps zoals de OID Client.</string>
+    <string name="added_content">\"%1$s\" toegevoegd</string>
+    <string name="shared_text_empty">Gedeelde tekst was leeg</string>
+    <string name="append_to_note">Achteraan toevoegen aan notitie</string>
+    <string name="settings_branding">Brandmerken</string>
+    <string name="simple_security">Beveiliging</string>
+    <string name="simple_appearance">Uiterlijk</string>
+    <string name="simple_synchronization">Synchronisatie</string>
+    <string name="simple_behavior">Gedrag</string>
+    <string name="share_multiple">Deel de inhoud van %1$d notities</string>
+    <string name="manage_accounts">Accounts beheren </string>
+    <string name="action_formatting_help">Formatteren</string>
+
     <!-- Array: note modes -->
     <string-array name="noteMode_entries">
         <item>Open in wbewerkmodus</item>
@@ -161,4 +190,11 @@
         <item quantity="one">%d geselecteerd</item>
         <item quantity="other">%d geselecteerd</item>
     </plurals>
-</resources>
+
+    <string name="formatting_help_text_title">Tekst</string>
+    <string name="formatting_help_checkboxes_title">Aanvinkvakjes</string>
+    <string name="formatting_help_code_title">Code</string>
+    <string name="formatting_help_unsupported_title">Niet ondersteund</string>
+    <string name="formatting_help_unsupported_body_3">Afbeeldingen</string>
+    <string name="simple_other">Ander</string>
+    </resources>

@@ -1,51 +1,48 @@
 package it.niedermann.owncloud.notes.persistence;
 
-import android.appwidget.AppWidgetManager;
-import android.content.ComponentName;
-import android.content.ContentValues;
 import android.content.Context;
-import android.content.SharedPreferences;
-import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
-import android.util.Log;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.preference.PreferenceManager;
 
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.util.Map;
-
-import it.niedermann.owncloud.notes.android.DarkModeSetting;
-import it.niedermann.owncloud.notes.android.appwidget.NoteListWidget;
-import it.niedermann.owncloud.notes.android.appwidget.SingleNoteWidget;
-import it.niedermann.owncloud.notes.model.DBStatus;
+import it.niedermann.owncloud.notes.persistence.migration.Migration_10_11;
+import it.niedermann.owncloud.notes.persistence.migration.Migration_11_12;
+import it.niedermann.owncloud.notes.persistence.migration.Migration_12_13;
+import it.niedermann.owncloud.notes.persistence.migration.Migration_13_14;
+import it.niedermann.owncloud.notes.persistence.migration.Migration_14_15;
+import it.niedermann.owncloud.notes.persistence.migration.Migration_15_16;
+import it.niedermann.owncloud.notes.persistence.migration.Migration_16_17;
+import it.niedermann.owncloud.notes.persistence.migration.Migration_17_18;
+import it.niedermann.owncloud.notes.persistence.migration.Migration_18_19;
+import it.niedermann.owncloud.notes.persistence.migration.Migration_4_5;
+import it.niedermann.owncloud.notes.persistence.migration.Migration_5_6;
+import it.niedermann.owncloud.notes.persistence.migration.Migration_6_7;
+import it.niedermann.owncloud.notes.persistence.migration.Migration_7_8;
+import it.niedermann.owncloud.notes.persistence.migration.Migration_8_9;
+import it.niedermann.owncloud.notes.persistence.migration.Migration_9_10;
 import it.niedermann.owncloud.notes.util.DatabaseIndexUtil;
-import it.niedermann.owncloud.notes.util.NoteUtil;
 
-// Protected APIs
-@SuppressWarnings("WeakerAccess")
 abstract class AbstractNotesDatabase extends SQLiteOpenHelper {
 
-    private static final String TAG = AbstractNotesDatabase.class.getSimpleName();
-
-    private static final int database_version = 12;
+    private static final int database_version = 19;
     @NonNull
-    private final Context context;
+    protected final Context context;
 
     protected static final String database_name = "OWNCLOUD_NOTES";
     protected static final String table_notes = "NOTES";
     protected static final String table_accounts = "ACCOUNTS";
+    protected static final String table_category = "CATEGORIES";
+    protected static final String table_widget_single_notes = "WIDGET_SINGLE_NOTES";
+    protected static final String table_widget_note_list = "WIDGET_NOTE_LISTS";
 
     protected static final String key_id = "ID";
-
     protected static final String key_url = "URL";
     protected static final String key_account_name = "ACCOUNT_NAME";
     protected static final String key_username = "USERNAME";
-
     protected static final String key_account_id = "ACCOUNT_ID";
+    protected static final String key_note_id = "NOTE_ID";
     protected static final String key_remote_id = "REMOTEID";
     protected static final String key_status = "STATUS";
     protected static final String key_title = "TITLE";
@@ -55,9 +52,17 @@ abstract class AbstractNotesDatabase extends SQLiteOpenHelper {
     protected static final String key_favorite = "FAVORITE";
     protected static final String key_category = "CATEGORY";
     protected static final String key_etag = "ETAG";
+    protected static final String key_capabilities_etag = "CAPABILITIES_ETAG";
     protected static final String key_color = "COLOR";
     protected static final String key_text_color = "TEXT_COLOR";
     protected static final String key_api_version = "API_VERSION";
+    protected static final String key_category_id = "CATEGORY_ID";
+    protected static final String key_category_title = "CATEGORY_TITLE";
+    protected static final String key_category_account_id = "CATEGORY_ACCOUNT_ID";
+    protected static final String key_theme_mode = "THEME_MODE";
+    protected static final String key_mode = "MODE";
+    protected static final String key_scroll_y = "SCROLL_Y";
+    protected static final String key_category_sorting_method = "CATEGORY_SORTING_METHOD";
 
     protected AbstractNotesDatabase(@NonNull Context context, @Nullable String name, @Nullable SQLiteDatabase.CursorFactory factory) {
         super(context, name, factory, database_version);
@@ -79,23 +84,28 @@ abstract class AbstractNotesDatabase extends SQLiteOpenHelper {
     public void onCreate(SQLiteDatabase db) {
         createAccountTable(db);
         createNotesTable(db);
+        createCategoryTable(db);
+        createWidgetSingleNoteTable(db);
+        createWidgetNoteListTable(db);
     }
 
     private void createNotesTable(@NonNull SQLiteDatabase db) {
         db.execSQL("CREATE TABLE " + table_notes + " ( " +
                 key_id + " INTEGER PRIMARY KEY AUTOINCREMENT, " +
                 key_remote_id + " INTEGER, " +
-                key_account_id + " INTEGER, " +
+                key_account_id + " INTEGER, " + // TODO NOT NULL
                 key_status + " VARCHAR(50), " +
                 key_title + " TEXT, " +
                 key_modified + " INTEGER DEFAULT 0, " +
                 key_content + " TEXT, " +
                 key_favorite + " INTEGER DEFAULT 0, " +
-                key_category + " TEXT NOT NULL DEFAULT '', " +
+                key_category + " INTEGER, " +
                 key_etag + " TEXT," +
                 key_excerpt + " TEXT NOT NULL DEFAULT '', " +
+                key_scroll_y + " INTEGER DEFAULT 0, " +
+                "FOREIGN KEY(" + key_category + ") REFERENCES " + table_category + "(" + key_category_id + "), " +
                 "FOREIGN KEY(" + key_account_id + ") REFERENCES " + table_accounts + "(" + key_id + "))");
-        createNotesIndexes(db);
+        DatabaseIndexUtil.createIndex(db, table_notes, key_remote_id, key_account_id, key_status, key_favorite, key_category, key_modified);
     }
 
     private void createAccountTable(@NonNull SQLiteDatabase db) {
@@ -108,171 +118,82 @@ abstract class AbstractNotesDatabase extends SQLiteOpenHelper {
                 key_modified + " INTEGER, " +
                 key_api_version + " TEXT, " +
                 key_color + " VARCHAR(6) NOT NULL DEFAULT '000000', " +
-                key_text_color + " VARCHAR(6) NOT NULL DEFAULT '0082C9')");
-        createAccountIndexes(db);
+                key_text_color + " VARCHAR(6) NOT NULL DEFAULT '0082C9', " +
+                key_capabilities_etag + " TEXT);");
+        DatabaseIndexUtil.createIndex(db, table_accounts, key_url, key_username, key_account_name, key_etag, key_modified);
     }
 
-    @SuppressWarnings("deprecation")
+    private void createCategoryTable(@NonNull SQLiteDatabase db) {
+        db.execSQL("CREATE TABLE " + table_category + "(" +
+                key_category_id + " INTEGER PRIMARY KEY AUTOINCREMENT, " +
+                key_category_account_id + " INTEGER NOT NULL, " +
+                key_category_title + " TEXT NOT NULL, " +
+                key_category_sorting_method + " INTEGER DEFAULT 0, " +
+                " UNIQUE( " + key_category_account_id + " , " + key_category_title + "), " +
+                " FOREIGN KEY(" + key_category_account_id + ") REFERENCES " + table_accounts + "(" + key_id + "));");
+        DatabaseIndexUtil.createIndex(db, table_category, key_category_id, key_category_account_id, key_category_title, key_category_sorting_method);
+    }
+
+    private void createWidgetSingleNoteTable(@NonNull SQLiteDatabase db) {
+        db.execSQL("CREATE TABLE " + table_widget_single_notes + " ( " +
+                key_id + " INTEGER PRIMARY KEY, " +
+                key_account_id + " INTEGER, " +
+                key_note_id + " INTEGER, " +
+                key_theme_mode + " INTEGER NOT NULL, " +
+                "FOREIGN KEY(" + key_account_id + ") REFERENCES " + table_accounts + "(" + key_id + "), " +
+                "FOREIGN KEY(" + key_note_id + ") REFERENCES " + table_notes + "(" + key_id + "))");
+    }
+
+    private void createWidgetNoteListTable(@NonNull SQLiteDatabase db) {
+        db.execSQL("CREATE TABLE " + table_widget_note_list + " ( " +
+                key_id + " INTEGER PRIMARY KEY, " +
+                key_account_id + " INTEGER, " +
+                key_category_id + " INTEGER, " +
+                key_mode + " INTEGER NOT NULL, " +
+                key_theme_mode + " INTEGER NOT NULL, " +
+                "FOREIGN KEY(" + key_account_id + ") REFERENCES " + table_accounts + "(" + key_id + "), " +
+                "FOREIGN KEY(" + key_category_id + ") REFERENCES " + table_category + "(" + key_category_id + "))");
+    }
+
     @Override
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
-        if (oldVersion < 3) {
-            recreateDatabase(db);
-            return;
-        }
-        if (oldVersion < 4) {
-            db.delete(table_notes, null, null);
-            db.delete(table_accounts, null, null);
-        }
-        if (oldVersion < 5) {
-            db.execSQL("ALTER TABLE " + table_notes + " ADD COLUMN " + key_remote_id + " INTEGER");
-            db.execSQL("UPDATE " + table_notes + " SET " + key_remote_id + "=" + key_id + " WHERE (" + key_remote_id + " IS NULL OR " + key_remote_id + "=0) AND " + key_status + "!=?", new String[]{DBStatus.LOCAL_CREATED.getTitle()});
-            db.execSQL("UPDATE " + table_notes + " SET " + key_remote_id + "=0, " + key_status + "=? WHERE " + key_status + "=?", new String[]{DBStatus.LOCAL_EDITED.getTitle(), DBStatus.LOCAL_CREATED.getTitle()});
-        }
-        if (oldVersion < 6) {
-            db.execSQL("ALTER TABLE " + table_notes + " ADD COLUMN " + key_favorite + " INTEGER DEFAULT 0");
-        }
-        if (oldVersion < 7) {
-            DatabaseIndexUtil.dropIndexes(db);
-            db.execSQL("ALTER TABLE " + table_notes + " ADD COLUMN " + key_category + " TEXT NOT NULL DEFAULT ''");
-            db.execSQL("ALTER TABLE " + table_notes + " ADD COLUMN " + key_etag + " TEXT");
-            DatabaseIndexUtil.createIndex(db, table_notes, key_remote_id, key_status, key_favorite, key_category, key_modified);
-        }
-        if (oldVersion < 8) {
-            final String table_temp = "NOTES_TEMP";
-            db.execSQL("CREATE TABLE " + table_temp + " ( " +
-                    key_id + " INTEGER PRIMARY KEY AUTOINCREMENT, " +
-                    key_remote_id + " INTEGER, " +
-                    key_status + " VARCHAR(50), " +
-                    key_title + " TEXT, " +
-                    key_modified + " INTEGER DEFAULT 0, " +
-                    key_content + " TEXT, " +
-                    key_favorite + " INTEGER DEFAULT 0, " +
-                    key_category + " TEXT NOT NULL DEFAULT '', " +
-                    key_etag + " TEXT)");
-            DatabaseIndexUtil.createIndex(db, table_temp, key_remote_id, key_status, key_favorite, key_category, key_modified);
-            db.execSQL(String.format("INSERT INTO %s(%s,%s,%s,%s,%s,%s,%s,%s,%s) ", table_temp, key_id, key_remote_id, key_status, key_title, key_modified, key_content, key_favorite, key_category, key_etag)
-                    + String.format("SELECT %s,%s,%s,%s,strftime('%%s',%s),%s,%s,%s,%s FROM %s", key_id, key_remote_id, key_status, key_title, key_modified, key_content, key_favorite, key_category, key_etag, table_notes));
-            db.execSQL(String.format("DROP TABLE %s", table_notes));
-            db.execSQL(String.format("ALTER TABLE %s RENAME TO %s", table_temp, table_notes));
-        }
-        if (oldVersion < 9) {
-            // Create accounts table
-            createAccountTable(db);
-
-            // Add accountId to notes table
-            db.execSQL("ALTER TABLE " + table_notes + " ADD COLUMN " + key_account_id + " INTEGER NOT NULL DEFAULT 0");
-            DatabaseIndexUtil.createIndex(db, table_notes, key_account_id);
-
-            // Migrate existing account from SharedPreferences
-            SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context);
-            String username = sharedPreferences.getString("settingsUsername", "");
-            String url = sharedPreferences.getString("settingsUrl", "");
-            if (!url.isEmpty() && url.endsWith("/")) {
-                url = url.substring(0, url.length() - 1);
-                try {
-                    String accountName = username + "@" + new URL(url).getHost();
-
-                    ContentValues migratedAccountValues = new ContentValues();
-                    migratedAccountValues.put(key_url, url);
-                    migratedAccountValues.put(key_username, username);
-                    migratedAccountValues.put(key_account_name, accountName);
-                    db.insert(table_accounts, null, migratedAccountValues);
-
-                    // After successful insertion of migrated account, set accountId to 1 in each note
-                    ContentValues values = new ContentValues();
-                    values.put(key_account_id, 1);
-                    db.update(table_notes, values, key_account_id + " = ?", new String[]{"NULL"});
-
-                    // Add FOREIGN_KEY constraint
-                    final String table_temp = "NOTES_TEMP";
-                    db.execSQL(String.format("ALTER TABLE %s RENAME TO %s", table_notes, table_temp));
-
-                    db.execSQL("CREATE TABLE " + table_notes + " ( " +
-                            key_id + " INTEGER PRIMARY KEY AUTOINCREMENT, " +
-                            key_remote_id + " INTEGER, " +
-                            key_account_id + " INTEGER, " +
-                            key_status + " VARCHAR(50), " +
-                            key_title + " TEXT, " +
-                            key_modified + " INTEGER DEFAULT 0, " +
-                            key_content + " TEXT, " +
-                            key_favorite + " INTEGER DEFAULT 0, " +
-                            key_category + " TEXT NOT NULL DEFAULT '', " +
-                            key_etag + " TEXT," +
-                            "FOREIGN KEY(" + key_account_id + ") REFERENCES " + table_accounts + "(" + key_id + "))");
-                    DatabaseIndexUtil.createIndex(db, table_notes, key_remote_id, key_account_id, key_status, key_favorite, key_category, key_modified);
-
-                    db.execSQL(String.format("INSERT INTO %s(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s) ", table_notes, key_id, key_account_id, key_remote_id, key_status, key_title, key_modified, key_content, key_favorite, key_category, key_etag)
-                            + String.format("SELECT %s,%s,%s,%s,%s,%s,%s,%s,%s,%s FROM %s", key_id, values.get(key_account_id), key_remote_id, key_status, key_title, key_modified, key_content, key_favorite, key_category, key_etag, table_temp));
-                    db.execSQL(String.format("DROP TABLE %s;", table_temp));
-
-                    AppWidgetManager awm = AppWidgetManager.getInstance(context);
-                    SharedPreferences.Editor editor = sharedPreferences.edit();
-
-                    // Add accountId '1' to any existing (and configured) appwidgets
-                    int[] appWidgetIdsNLW = awm.getAppWidgetIds(new ComponentName(context, NoteListWidget.class));
-                    int[] appWidgetIdsSNW = awm.getAppWidgetIds(new ComponentName(context, SingleNoteWidget.class));
-
-                    for (int appWidgetId : appWidgetIdsNLW) {
-                        if (sharedPreferences.getInt(NoteListWidget.WIDGET_MODE_KEY + appWidgetId, -1) >= 0) {
-                            editor.putLong(NoteListWidget.ACCOUNT_ID_KEY + appWidgetId, 1);
-                        }
-                    }
-
-                    for (int appWidgetId : appWidgetIdsSNW) {
-                        if (sharedPreferences.getLong(SingleNoteWidget.WIDGET_KEY + appWidgetId, -1) >= 0) {
-                            editor.putLong(SingleNoteWidget.ACCOUNT_ID_KEY + appWidgetId, 1);
-                        }
-                    }
-
-                    notifyNotesChanged();
-
-                    // Clean up no longer needed SharedPreferences
-                    editor.remove("notes_last_etag");
-                    editor.remove("notes_last_modified");
-                    editor.remove("settingsUrl");
-                    editor.remove("settingsUsername");
-                    editor.remove("settingsPassword");
-                    editor.apply();
-                } catch (MalformedURLException e) {
-                    Log.e(TAG, "Previous URL could not be parsed. Recreating database...");
-                    e.printStackTrace();
-                    recreateDatabase(db);
-                    return;
-                }
-            } else {
-                Log.e(TAG, "Previous URL is empty or does not end with a '/' character. Recreating database...");
+        switch (oldVersion) {
+            case 0:
+            case 1:
+            case 2:
+            case 3:
                 recreateDatabase(db);
                 return;
-            }
-        }
-        if (oldVersion < 10) {
-            db.execSQL("ALTER TABLE " + table_notes + " ADD COLUMN " + key_excerpt + " INTEGER NOT NULL DEFAULT ''");
-            Cursor cursor = db.query(table_notes, new String[]{key_id, key_content}, null, null, null, null, null, null);
-            while (cursor.moveToNext()) {
-                ContentValues values = new ContentValues();
-                values.put(key_excerpt, NoteUtil.generateNoteExcerpt(cursor.getString(1)));
-                db.update(table_notes, values, key_id + " = ? ", new String[]{cursor.getString(0)});
-            }
-            cursor.close();
-        }
-        if (oldVersion < 11) {
-            SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context);
-            SharedPreferences.Editor editor = sharedPreferences.edit();
-            Map<String, ?> prefs = sharedPreferences.getAll();
-            for (Map.Entry<String, ?> pref : prefs.entrySet()) {
-                String key = pref.getKey();
-                if ("darkTheme".equals(key) || key.startsWith(NoteListWidget.DARK_THEME_KEY) || key.startsWith(SingleNoteWidget.DARK_THEME_KEY)) {
-                    Boolean darkTheme = (Boolean) pref.getValue();
-                    editor.putString(pref.getKey(), darkTheme ? DarkModeSetting.DARK.name() : DarkModeSetting.LIGHT.name());
-                }
-            }
-            editor.apply();
-        }
-        if (oldVersion < 12) {
-            db.execSQL("ALTER TABLE " + table_accounts + " ADD COLUMN " + key_api_version + " TEXT");
-            db.execSQL("ALTER TABLE " + table_accounts + " ADD COLUMN " + key_color + " VARCHAR(6) NOT NULL DEFAULT '000000'");
-            db.execSQL("ALTER TABLE " + table_accounts + " ADD COLUMN " + key_text_color + " VARCHAR(6) NOT NULL DEFAULT '0082C9'");
-            CapabilitiesWorker.update(context);
+            case 4:
+                new Migration_4_5(db);
+            case 5:
+                new Migration_5_6(db);
+            case 6:
+                new Migration_6_7(db);
+            case 7:
+                new Migration_7_8(db);
+            case 8:
+                new Migration_8_9(db, context, this::recreateDatabase, this::notifyWidgets);
+            case 9:
+                new Migration_9_10(db);
+            case 10:
+                new Migration_10_11(context);
+            case 11:
+                new Migration_11_12(db, context);
+            case 12:
+                new Migration_12_13(db, context);
+            case 13:
+                new Migration_13_14(db, context, this::notifyWidgets);
+            case 14:
+                new Migration_14_15(db);
+            case 15:
+                new Migration_15_16(db, context, this::notifyWidgets);
+            case 16:
+                new Migration_16_17(db);
+            case 17:
+                new Migration_17_18(db);
+            case 18:
+                new Migration_18_19(context);
         }
     }
 
@@ -285,16 +206,9 @@ abstract class AbstractNotesDatabase extends SQLiteOpenHelper {
         DatabaseIndexUtil.dropIndexes(db);
         db.execSQL("DROP TABLE IF EXISTS " + table_notes);
         db.execSQL("DROP TABLE IF EXISTS " + table_accounts);
+        db.execSQL("DROP TABLE IF EXISTS " + table_category);
         onCreate(db);
     }
 
-    private static void createNotesIndexes(@NonNull SQLiteDatabase db) {
-        DatabaseIndexUtil.createIndex(db, table_notes, key_remote_id, key_account_id, key_status, key_favorite, key_category, key_modified);
-    }
-
-    private static void createAccountIndexes(@NonNull SQLiteDatabase db) {
-        DatabaseIndexUtil.createIndex(db, table_accounts, key_url, key_username, key_account_name, key_etag, key_modified);
-    }
-
-    protected abstract void notifyNotesChanged();
+    protected abstract void notifyWidgets();
 }

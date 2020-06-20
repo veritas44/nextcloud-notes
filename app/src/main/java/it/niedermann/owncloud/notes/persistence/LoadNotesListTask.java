@@ -1,14 +1,8 @@
 package it.niedermann.owncloud.notes.persistence;
 
 import android.content.Context;
-import android.graphics.Color;
 import android.os.AsyncTask;
-import android.text.Html;
-import android.text.SpannableString;
-import android.text.TextUtils;
 import android.text.format.DateUtils;
-import android.text.style.BackgroundColorSpan;
-import android.text.style.ForegroundColorSpan;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -17,15 +11,13 @@ import androidx.annotation.WorkerThread;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import it.niedermann.owncloud.notes.R;
 import it.niedermann.owncloud.notes.model.Category;
 import it.niedermann.owncloud.notes.model.DBNote;
 import it.niedermann.owncloud.notes.model.Item;
 import it.niedermann.owncloud.notes.model.SectionItem;
-import it.niedermann.owncloud.notes.util.DisplayUtils;
+import it.niedermann.owncloud.notes.util.CategorySortingMethod;
 import it.niedermann.owncloud.notes.util.NoteUtil;
 
 public class LoadNotesListTask extends AsyncTask<Void, Void, List<Item>> {
@@ -35,8 +27,6 @@ public class LoadNotesListTask extends AsyncTask<Void, Void, List<Item>> {
     private final Category category;
     private final CharSequence searchQuery;
     private final long accountId;
-    private final int searchForeground;
-    private final int searchBackground;
 
     public LoadNotesListTask(long accountId, @NonNull Context context, @NonNull NotesLoadedListener callback, @NonNull Category category, @Nullable CharSequence searchQuery) {
         this.context = context;
@@ -44,45 +34,24 @@ public class LoadNotesListTask extends AsyncTask<Void, Void, List<Item>> {
         this.category = category;
         this.searchQuery = searchQuery;
         this.accountId = accountId;
-        this.searchBackground = context.getResources().getColor(R.color.bg_highlighted);
-        this.searchForeground = DisplayUtils.getForeground(Integer.toHexString(this.searchBackground)) ? Color.WHITE : context.getResources().getColor(R.color.primary);
     }
 
     @Override
     protected List<Item> doInBackground(Void... voids) {
         List<DBNote> noteList;
         NotesDatabase db = NotesDatabase.getInstance(context);
-        noteList = db.searchNotes(accountId, searchQuery, category.category, category.favorite);
+        CategorySortingMethod sortingMethod = db.getCategoryOrder(accountId, category);
+        noteList = db.searchNotes(accountId, searchQuery, category.category, category.favorite, sortingMethod);
 
         if (category.category == null) {
-            return fillListByTime(noteList);
+            if (sortingMethod == CategorySortingMethod.SORT_MODIFIED_DESC) {
+                return fillListByTime(noteList);
+            } else {
+                return fillListByInitials(noteList);
+            }
         } else {
             return fillListByCategory(noteList);
         }
-    }
-
-    private DBNote colorTheNote(DBNote dbNote) {
-        if (!TextUtils.isEmpty(searchQuery)) {
-            SpannableString spannableString = new SpannableString(dbNote.getTitle());
-            Matcher matcher = Pattern.compile("(" + searchQuery + ")", Pattern.CASE_INSENSITIVE).matcher(spannableString);
-            while (matcher.find()) {
-                spannableString.setSpan(new ForegroundColorSpan(searchForeground), matcher.start(), matcher.end(), 0);
-                spannableString.setSpan(new BackgroundColorSpan(searchBackground), matcher.start(), matcher.end(), 0);
-            }
-
-            dbNote.setTitle(Html.toHtml(spannableString));
-
-            spannableString = new SpannableString(dbNote.getExcerpt());
-            matcher = Pattern.compile("(" + searchQuery + ")", Pattern.CASE_INSENSITIVE).matcher(spannableString);
-            while (matcher.find()) {
-                spannableString.setSpan(new ForegroundColorSpan(searchForeground), matcher.start(), matcher.end(), 0);
-                spannableString.setSpan(new BackgroundColorSpan(searchBackground), matcher.start(), matcher.end(), 0);
-            }
-
-            dbNote.setExcerpt(Html.toHtml(spannableString));
-        }
-
-        return dbNote;
     }
 
     @NonNull
@@ -95,7 +64,7 @@ public class LoadNotesListTask extends AsyncTask<Void, Void, List<Item>> {
                 itemList.add(new SectionItem(NoteUtil.extendCategory(note.getCategory())));
             }
 
-            itemList.add(colorTheNote(note));
+            itemList.add(note);
             currentCategory = note.getCategory();
         }
         return itemList;
@@ -113,8 +82,29 @@ public class LoadNotesListTask extends AsyncTask<Void, Void, List<Item>> {
             if (i > 0 && !timeslot.equals(lastTimeslot)) {
                 itemList.add(new SectionItem(timeslot));
             }
-            itemList.add(colorTheNote(currentNote));
+            itemList.add(currentNote);
             lastTimeslot = timeslot;
+        }
+
+        return itemList;
+    }
+
+    @NonNull
+    @WorkerThread
+    private List<Item> fillListByInitials(@NonNull List<DBNote> noteList) {
+        List<Item> itemList = new ArrayList<>();
+        String lastInitials = null;
+        for (int i = 0; i < noteList.size(); i++) {
+            DBNote currentNote = noteList.get(i);
+            String initials = currentNote.getTitle().substring(0, 1).toUpperCase();
+            if (!initials.matches("[A-Z\\u00C0-\\u00DF]")) {
+                initials = initials.matches("[\\u0250-\\uFFFF]") ? context.getString(R.string.simple_other) : "#";
+            }
+            if (i > 0 && !initials.equals(lastInitials)) {
+                itemList.add(new SectionItem(initials));
+            }
+            itemList.add(currentNote);
+            lastInitials = initials;
         }
 
         return itemList;
@@ -122,11 +112,11 @@ public class LoadNotesListTask extends AsyncTask<Void, Void, List<Item>> {
 
     @Override
     protected void onPostExecute(List<Item> items) {
-        callback.onNotesLoaded(items, category.category == null);
+        callback.onNotesLoaded(items, category.category == null, searchQuery);
     }
 
     public interface NotesLoadedListener {
-        void onNotesLoaded(List<Item> notes, boolean showCategory);
+        void onNotesLoaded(List<Item> notes, boolean showCategory, CharSequence searchQuery);
     }
 
     private class Timeslotter {

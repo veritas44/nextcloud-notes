@@ -9,6 +9,7 @@
     <string name="action_settings">Nastavitve</string>
     <string name="action_trashbin">Izbrisane zabeležke</string>
     <string name="action_search">Poišči</string>
+    <string name="action_sorting_method">Način razvrščanja</string>
     <string name="simple_cancel">Prekliči</string>
     <string name="simple_edit">Uredi</string>
     <string name="action_edit_save">Shrani</string>
@@ -19,14 +20,15 @@
     <string name="action_note_deleted">Izbrisano %1$s</string>
     <string name="action_note_restored">Obnovljeno %1$s</string>
     <string name="action_undo">Razveljavi</string>
-    <string name="action_drawer_open">odpri iskalnik</string>
-    <string name="action_drawer_close">zapri iskalnik</string>
     <string name="action_uncategorized">Neopredeljeno</string>
     <string name="menu_delete">Izbriši</string>
     <string name="menu_change_category">Kategorija</string>
     <string name="menu_favorite">Priljubljena</string>
     <string name="menu_preview">Predogled</string>
     <string name="menu_share">Souporaba</string>
+
+    <string name="search_in_category">Poišči v %1$s</string>
+    <string name="search_in_all">Preišči vse zabeležke</string>
 
     <string name="change_category_title">Izbor kategorije</string>
 
@@ -50,10 +52,9 @@
 
     <!-- Error -->
     <string name="error_sync">Usklajevanje je spodletelo: %1$s</string>
+    <string name="error_synchronization">Usklajevanje je spodletelo</string>
     <string name="error_json">Ali je program Notes na strežniku omogočen?</string>
     <string name="error_no_network">Ni omrežne povezave</string>
-    <string name="error_files_app">Ali je program za upravljanje datotek »files« nameščen?</string>
-    <string name="error_insufficient_storage">Shramba strežnika je polna.</string>
     <string name="error_unknown">Prišlo je do neznane napake.</string>
 
     <!-- About -->
@@ -117,7 +118,6 @@
     <string name="could_not_load_preview_two_digit_numbered_list">Predogleda ni mogoče naložiti. Preverite, ali je morda vpisan  dvoštevilčen predmet seznama brez vsebine.</string>
     <string name="simple_more">Več</string>
     <string name="simple_move">Premakni</string>
-    <string name="error_files_app_version_too_old">Ali je nameščena zadnja različica programa?</string>
     <string name="checkbox_could_not_be_toggled">Izbirnega polja ni mogoče preklopiti.</string>
     <string name="bulk_notes_deleted">Izbrisane zabeležke: %1$d</string>
     <string name="bulk_notes_restored">Obnovljene zabeležke: %1$d</string>
@@ -127,6 +127,38 @@
     <string name="simple_checkbox">Izbirno polje</string>
     <string name="unlock_notes">Odkleni zabeležke</string>
     <string name="simple_beta">Preizkusno</string>
+    <string name="could_not_copy_to_clipboard">Predmeta ni mogoče kopirati v odložišče</string>
+    <string name="error_dialog_title">Ojoj, kaj pa zdaj? 🙁</string>
+    <string name="error_dialog_tip_token_mismatch_retry">Poskusite vsiliti končanje programa in ga ponovno zagnati. Morda je težava v neustrezni povezavi z okoljem Nextcloud</string>
+    <string name="error_dialog_tip_token_mismatch_clear_storage">Če se težava še naprej pojavlja, poskusite počistiti podatke programa Nextcloud in Nextcloud Notes.</string>
+    <string name="error_dialog_tip_clear_storage">Podatke in shrambo je mogoče počistiti med nastavitvami → Programi → Nextcloud / Nextcloud Notes → Shramba → Počisti shrambo.</string>
+    <string name="error_dialog_tip_files_outdated">Program Nextcloud je očitno starejše različice. Posodobite jo prek Trgovine Play ali s posodabljalnikom F-Droid.</string>
+    <string name="error_dialog_tip_files_force_stop">Kaže, da je nekaj narobe s programom Nextcloud. Poskusite vsiljeno zaustaviti programa Nextcloud in Nextcloud Notes.</string>
+    <string name="error_dialog_tip_files_delete_storage">Vsiljeno zaustavljanje ni imelo ustreznega učinka. Poskusite lahko še počistiti podatke shrambe obeh programov.</string>
+    <string name="error_dialog_timeout_instance">V podanem času program ni pridobil ustreznega odziva strežnika. Prepričajte se, da program deluje pravilno.</string>
+    <string name="error_dialog_timeout_toggle">Preverite omrežno povezavo. Včasih preklapljanje med mobilnimi in Wi-Fi podatki razreši težavo.</string>
+    <string name="error_dialog_check_server">Prejet je napačen odziv s strežnika. Preverite, ali imate dostop do zabeležk prek spletnega vmesnika.</string>
+    <string name="error_dialog_check_server_logs">Prišlo je do napake z namestitvijo Nextcloud. Preverite zapis dnevnika na strežniku.</string>
+    <string name="error_dialog_check_maintenance">Preverite, ali je morda namestitev Nextcloud trenutno v vzdrževalnem načinu.</string>
+    <string name="error_dialog_insufficient_storage">V shrambi ni več prostora. Za nadaljevanje usklajevanja z oblakom je treba Izbrisati nekaj krajevnih datotek.</string>
+    <string name="error_dialog_contact_us">V kolikor se napaka še naprej pojavlja, ne odlašajte in stopite v stik z nami. Podatke o možnostih stika so v bočnem oknu med opisi programa.</string>
+    <string name="error_dialog_we_need_info">Z ustrezno pomoč potrebujemo nekaj tehničnih podrobnosti sistema:</string>
+    <string name="error_dialog_server_app_enabled">Prepričajte se, da ste namestili in omogočili tudi program »Notes« na strežniku.</string>
+    <string name="error_dialog_redirect">S strežnika je prejet odziv s kodo stanja HTTP 302, kar kaže na to, da program Notes ni nameščen, ali pa je napačno nastavljen. Napaka se pojavi tudi pri nekaterih določilih v datoteki .htaccess oziroma programih, kot je odjemalec OID.</string>
+    <string name="added_content">Dodano »%1$s«</string>
+    <string name="shared_text_empty">Besedilo v souporabi je brez vsebine</string>
+    <string name="append_to_note">Pripni k zabeležki</string>
+    <string name="change_note_title">Spremeni naslov zabeležke</string>
+    <string name="menu_edit_title">Uredi naslov</string>
+    <string name="settings_branding">Prilagajanje oblikovanja</string>
+    <string name="settings_gridview">Mrežni pogled</string>
+    <string name="simple_security">Varnost</string>
+    <string name="simple_appearance">Videz</string>
+    <string name="simple_synchronization">Usklajevanje</string>
+    <string name="simple_behavior">Obnašanje</string>
+    <string name="manage_accounts">Upravljanje z računi</string>
+    <string name="action_formatting_help">Oblikovanje</string>
+
     <!-- Array: note modes -->
     <string-array name="noteMode_entries">
         <item>Zabeležka se odpre v urejevalnem načinu</item>
@@ -162,4 +194,39 @@
         <item quantity="few">%d izbrane</item>
         <item quantity="other">%d izbranih</item>
     </plurals>
+
+    <string name="formatting_help_divider" translateable="false">---</string>
+    <string name="formatting_help_codefence_inline" translateable="false">» %1$s «</string>
+    <string name="formatting_help_codefence_inline_escaped" translateable="false">\\`%1$s\\`</string>
+    <string name="formatting_help_codefence" translateable="false">```</string>
+    <string name="formatting_help_codefence_javascript" translateable="false">```javascript</string>
+    <string name="formatting_help_cbf_title">Vsebinsko oblikovanje</string>
+    <string name="formatting_help_text_title">Besedilo</string>
+    <string name="formatting_help_lists_title">Seznami</string>
+    <string name="formatting_help_lists_body_1">Včasih pridejo prav oštevilčeni seznami:</string>
+    <string name="formatting_help_lists_body_2">Ena</string>
+    <string name="formatting_help_lists_body_3">Dve</string>
+    <string name="formatting_help_lists_body_4">Tri</string>
+    <string name="formatting_help_lists_body_5">Včasih pridejo prav točkovni seznami</string>
+    <string name="formatting_help_lists_body_6">Začnite vrstico s črtico</string>
+    <string name="formatting_help_lists_body_7">Če želite vpisati podrejene točke, postavite dva presledka pred črtico oziroma zvezdico:</string>
+    <string name="formatting_help_lists_body_8">Tako,</string>
+    <string name="formatting_help_lists_body_9">in tako,</string>
+
+    <string name="formatting_help_checkboxes_title">Izbirna polja</string>
+    <string name="formatting_help_checkboxes_body_1">Izbirno polje ustvarite s seznamom, ki mu sledi oklepaj</string>
+    <string name="formatting_help_checkboxes_body_2">Predmet A</string>
+    <string name="formatting_help_checkboxes_body_3">Predmet B</string>
+
+    <string name="formatting_help_structured_documents_title">Strukturirani dokumenti</string>
+    <string name="formatting_help_structured_documents_body_5">Domišljija je pomembnejša od znanja. Znanje je omejeno, domišljija pa obkroži ves svet.</string>
+    <string name="formatting_help_structured_documents_body_6">- Albert Einstein</string>
+
+    <string name="formatting_help_code_title">Šifra</string>
+    <string name="formatting_help_unsupported_title">Nepodprto</string>
+    <string name="formatting_help_unsupported_body_2">Razpredelnice</string>
+    <string name="formatting_help_unsupported_body_3">Slike</string>
+    <string name="simple_other">Drugo</string>
+    <string name="sort_last_modified">Razvrsti po datumu spremembe</string>
+    <string name="sort_alphabetically">Razvrsti abecedno</string>
 </resources>

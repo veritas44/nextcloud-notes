@@ -3,17 +3,18 @@ package it.niedermann.owncloud.notes.android.appwidget;
 import android.appwidget.AppWidgetManager;
 import android.content.Context;
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.util.Log;
 import android.widget.RemoteViews;
 import android.widget.RemoteViewsService;
 
-import androidx.preference.PreferenceManager;
+import java.util.NoSuchElementException;
 
 import it.niedermann.owncloud.notes.R;
+import it.niedermann.owncloud.notes.android.DarkModeSetting;
 import it.niedermann.owncloud.notes.android.activity.EditNoteActivity;
 import it.niedermann.owncloud.notes.model.DBNote;
+import it.niedermann.owncloud.notes.model.SingleNoteWidgetData;
 import it.niedermann.owncloud.notes.persistence.NotesDatabase;
 import it.niedermann.owncloud.notes.util.Notes;
 
@@ -27,8 +28,7 @@ public class SingleNoteWidgetFactory implements RemoteViewsService.RemoteViewsFa
 
     private NotesDatabase db;
     private DBNote note;
-    private final SharedPreferences sp;
-    private boolean darkModeActive;
+    private boolean darkModeActive = false;
 
     private static final String TAG = SingleNoteWidget.class.getSimpleName();
 
@@ -36,32 +36,33 @@ public class SingleNoteWidgetFactory implements RemoteViewsService.RemoteViewsFa
         this.context = context;
         appWidgetId = intent.getIntExtra(AppWidgetManager.EXTRA_APPWIDGET_ID,
                 AppWidgetManager.INVALID_APPWIDGET_ID);
-        sp = PreferenceManager.getDefaultSharedPreferences(this.context);
-        darkModeActive = Notes.isDarkThemeActive(context, NoteWidgetHelper.getDarkThemeSetting(sp, DARK_THEME_KEY, appWidgetId));
-//        markdownProcessor = new MarkdownProcessor(this.context);
-//        markdownProcessor.factory(TextFactory.create());
-//        markdownProcessor.config(MarkDownUtil.getMarkDownConfiguration(this.context, darkModeActive).build());
+        db = NotesDatabase.getInstance(context);
+        try {
+            SingleNoteWidgetData data = db.getSingleNoteWidgetData(appWidgetId);
+            darkModeActive = Notes.isDarkThemeActive(context, DarkModeSetting.fromModeID(data.getThemeMode()));
+        } catch (NoSuchElementException e) {
+            Log.w(TAG, "Widget with ID " + appWidgetId + " seems to be not configured yet.");
+        }
     }
 
     @Override
     public void onCreate() {
-        db = NotesDatabase.getInstance(context);
-    }
 
+    }
 
     @Override
     public void onDataSetChanged() {
-        long noteID = sp.getLong(SingleNoteWidget.WIDGET_KEY + appWidgetId, -1);
-
-        if (noteID >= 0) {
-            Log.v(TAG, "Fetch note for account " + SingleNoteWidget.ACCOUNT_ID_KEY + appWidgetId);
-            Log.v(TAG, "Fetch note for account " + sp.getLong(SingleNoteWidget.ACCOUNT_ID_KEY + appWidgetId, -1));
-            Log.v(TAG, "Fetch note with id " + noteID);
-            note = db.getNote(sp.getLong(SingleNoteWidget.ACCOUNT_ID_KEY + appWidgetId, -1), noteID);
+        try {
+            final SingleNoteWidgetData data = db.getSingleNoteWidgetData(appWidgetId);
+            final long noteId = data.getNoteId();
+            Log.v(TAG, "Fetch note with id " + noteId);
+            note = db.getNote(data.getAccountId(), noteId);
 
             if (note == null) {
                 Log.e(TAG, "Error: note not found");
             }
+        } catch (NoSuchElementException e) {
+            Log.w(TAG, "Widget with ID " + appWidgetId + " seems to be not configured yet.");
         }
     }
 

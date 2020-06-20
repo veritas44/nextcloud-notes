@@ -1,6 +1,8 @@
 package it.niedermann.owncloud.notes.android.fragment;
 
+import android.graphics.Color;
 import android.os.Bundle;
+import android.os.Handler;
 import android.text.Layout;
 import android.text.TextUtils;
 import android.util.Log;
@@ -11,17 +13,23 @@ import android.view.ViewTreeObserver;
 import android.widget.LinearLayout;
 import android.widget.ScrollView;
 
+import androidx.annotation.CallSuper;
+import androidx.annotation.ColorInt;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.widget.SearchView;
 
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 import it.niedermann.owncloud.notes.R;
+import it.niedermann.owncloud.notes.branding.BrandedActivity;
 
 public abstract class SearchableBaseNoteFragment extends BaseNoteFragment {
 
-    private static final String TAG = SearchableBaseNoteFragment.class.getCanonicalName();
+    private static final String TAG = SearchableBaseNoteFragment.class.getSimpleName();
     private static final String saved_instance_key_searchQuery = "searchQuery";
     private static final String saved_instance_key_currentOccurrence = "currentOccurrence";
 
@@ -29,6 +37,19 @@ public abstract class SearchableBaseNoteFragment extends BaseNoteFragment {
     private int occurrenceCount = 0;
     private SearchView searchView;
     private String searchQuery = null;
+    private static final int delay = 50; // If the search string does not change after $delay ms, then the search task starts.
+
+    @ColorInt
+    private int mainColor;
+    @ColorInt
+    private int textColor;
+
+    @Override
+    public void onStart() {
+        this.mainColor = getResources().getColor(R.color.defaultBrand);
+        this.textColor = Color.WHITE;
+        super.onStart();
+    }
 
     @Override
     public void onActivityCreated(@Nullable Bundle savedInstanceState) {
@@ -68,12 +89,12 @@ public abstract class SearchableBaseNoteFragment extends BaseNoteFragment {
 
                 if (currentVisibility != oldVisibility) {
                     if (currentVisibility != View.VISIBLE) {
-                        colorWithText("", null);
+                        colorWithText("", null, mainColor, textColor);
                         searchQuery = "";
                         hideSearchFabs();
                     } else {
                         jumpToOccurrence();
-                        colorWithText(searchQuery, null);
+                        colorWithText(searchQuery, null, mainColor, textColor);
                         occurrenceCount = countOccurrences(getContent(), searchQuery);
                         showSearchFabs();
                     }
@@ -91,28 +112,38 @@ public abstract class SearchableBaseNoteFragment extends BaseNoteFragment {
             next.setOnClickListener(v -> {
                 currentOccurrence++;
                 jumpToOccurrence();
-                colorWithText(searchView.getQuery().toString(), currentOccurrence);
+                colorWithText(searchView.getQuery().toString(), currentOccurrence, mainColor, textColor);
             });
         }
 
         if (prev != null) {
             prev.setOnClickListener(v -> {
+                occurrenceCount = countOccurrences(getContent(), searchView.getQuery().toString());
                 currentOccurrence--;
                 jumpToOccurrence();
-                colorWithText(searchView.getQuery().toString(), currentOccurrence);
+                colorWithText(searchView.getQuery().toString(), currentOccurrence, mainColor, textColor);
             });
         }
 
         searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
+            private DelayQueryRunnable delayQueryTask;
+            private Handler handler = new Handler();
+
             @Override
-            public boolean onQueryTextSubmit(String query) {
+            public boolean onQueryTextSubmit(@NonNull String query) {
                 currentOccurrence++;
                 jumpToOccurrence();
+                colorWithText(query, currentOccurrence, mainColor, textColor);
                 return true;
             }
 
             @Override
-            public boolean onQueryTextChange(String newText) {
+            public boolean onQueryTextChange(@NonNull String newText) {
+                queryWithHandler(newText);
+                return true;
+            }
+
+            private void queryMatch(@NonNull String newText) {
                 searchQuery = newText;
                 occurrenceCount = countOccurrences(getContent(), searchQuery);
                 if (occurrenceCount > 1) {
@@ -122,8 +153,38 @@ public abstract class SearchableBaseNoteFragment extends BaseNoteFragment {
                 }
                 currentOccurrence = 1;
                 jumpToOccurrence();
-                colorWithText(searchQuery, currentOccurrence);
-                return true;
+                colorWithText(searchQuery, currentOccurrence, mainColor, textColor);
+            }
+
+            private void queryWithHandler(@NonNull String newText) {
+                if (delayQueryTask != null) {
+                    delayQueryTask.cancel();
+                    handler.removeCallbacksAndMessages(null);
+                }
+                delayQueryTask = new DelayQueryRunnable(newText);
+                // If there is only one char in the search pattern, we should start the search immediately.
+                handler.postDelayed(delayQueryTask, newText.length() > 1 ? delay : 0);
+            }
+
+            class DelayQueryRunnable implements Runnable {
+                private String text;
+                private boolean canceled = false;
+
+                public DelayQueryRunnable(String text) {
+                    this.text = text;
+                }
+
+                @Override
+                public void run() {
+                    if (canceled) {
+                        return;
+                    }
+                    queryMatch(text);
+                }
+
+                public void cancel() {
+                    canceled = true;
+                }
             }
         });
     }
@@ -138,9 +199,7 @@ public abstract class SearchableBaseNoteFragment extends BaseNoteFragment {
         }
     }
 
-    protected abstract void colorWithText(@NonNull String newText, @Nullable Integer current);
-
-    protected abstract ScrollView getScrollView();
+    protected abstract void colorWithText(@NonNull String newText, @Nullable Integer current, int mainColor, int textColor);
 
     protected abstract Layout getLayout();
 
@@ -196,7 +255,10 @@ public abstract class SearchableBaseNoteFragment extends BaseNoteFragment {
             int numberLine = layout.getLineForOffset(textUntilFirstOccurrence.length());
 
             if (numberLine >= 0) {
-                getScrollView().post(() -> getScrollView().smoothScrollTo(0, layout.getLineTop(numberLine)));
+                ScrollView scrollView = getScrollView();
+                if (scrollView != null) {
+                    scrollView.post(() -> scrollView.smoothScrollTo(0, layout.getLineTop(numberLine)));
+                }
             }
         }
     }
@@ -216,16 +278,25 @@ public abstract class SearchableBaseNoteFragment extends BaseNoteFragment {
         if (haystack == null || haystack.isEmpty() || needle == null || needle.isEmpty()) {
             return 0;
         }
-        int lastIndex = 0;
-        int count = 0;
+        // Use regrex which is faster before.
+        // Such that the main thread will not stop for a long tilme
+        // And so there will not an ANR problem
+        Matcher m = Pattern.compile(needle, Pattern.CASE_INSENSITIVE | Pattern.LITERAL)
+                .matcher(haystack);
 
-        while (lastIndex != -1) {
-            lastIndex = haystack.toLowerCase().indexOf(needle.toLowerCase(), lastIndex);
-            if (lastIndex != -1) {
-                count++;
-                lastIndex += needle.length();
-            }
+        int count = 0;
+        while (m.find()) {
+            count++;
         }
         return count;
+    }
+
+    @CallSuper
+    @Override
+    public void applyBrand(int mainColor, int textColor) {
+        this.mainColor = mainColor;
+        this.textColor = textColor;
+        BrandedActivity.applyBrandToFAB(mainColor, textColor, getSearchPrevButton());
+        BrandedActivity.applyBrandToFAB(mainColor, textColor, getSearchNextButton());
     }
 }

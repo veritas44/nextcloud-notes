@@ -29,9 +29,9 @@ import it.niedermann.owncloud.notes.model.DBNote;
 import it.niedermann.owncloud.notes.model.LocalAccount;
 import it.niedermann.owncloud.notes.util.NoteUtil;
 
-import static it.niedermann.owncloud.notes.android.fragment.AccountChooserAdapter.AccountChooserListener;
+import static it.niedermann.owncloud.notes.android.fragment.AccountChooserAdapter.MoveAccountListener;
 
-public class EditNoteActivity extends LockedActivity implements BaseNoteFragment.NoteFragmentListener, AccountChooserListener {
+public class EditNoteActivity extends LockedActivity implements BaseNoteFragment.NoteFragmentListener, MoveAccountListener {
 
     private static final String TAG = EditNoteActivity.class.getSimpleName();
 
@@ -42,6 +42,7 @@ public class EditNoteActivity extends LockedActivity implements BaseNoteFragment
     public static final String PARAM_ACCOUNT_ID = "accountId";
     public static final String PARAM_CATEGORY = "category";
     public static final String PARAM_CONTENT = "content";
+    public static final String PARAM_FAVORITE = "favorite";
 
     private ActivityEditBinding binding;
 
@@ -53,6 +54,7 @@ public class EditNoteActivity extends LockedActivity implements BaseNoteFragment
 
         binding = ActivityEditBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
+        setSupportActionBar(binding.toolbar);
 
         if (savedInstanceState == null) {
             launchNoteFragment();
@@ -266,7 +268,12 @@ public class EditNoteActivity extends LockedActivity implements BaseNoteFragment
     }
 
     @Override
-    public void onAccountChosen(LocalAccount account) {
+    public void moveToAccount(LocalAccount account) {
         fragment.moveNote(account);
+    }
+
+    @Override
+    public void applyBrand(int mainColor, int textColor) {
+        applyBrandToPrimaryToolbar(binding.toolbar);
     }
 }

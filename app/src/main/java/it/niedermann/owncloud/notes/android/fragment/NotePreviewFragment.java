@@ -47,6 +47,8 @@ import it.niedermann.owncloud.notes.util.NoteLinksUtils;
 import it.niedermann.owncloud.notes.util.SSOUtil;
 
 import static it.niedermann.owncloud.notes.util.DisplayUtils.searchAndColor;
+import static it.niedermann.owncloud.notes.util.NoteUtil.getFontSizeFromPreferences;
+
 public class NotePreviewFragment extends SearchableBaseNoteFragment implements OnRefreshListener {
 
     private String changedText;
@@ -140,17 +142,17 @@ public class NotePreviewFragment extends SearchableBaseNoteFragment implements O
         binding.swiperefreshlayout.setOnRefreshListener(this);
 
         SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(requireActivity().getApplicationContext());
-        binding.singleNoteContent.setTextSize(TypedValue.COMPLEX_UNIT_PX, getFontSizeFromPreferences(sp));
+        binding.singleNoteContent.setTextSize(TypedValue.COMPLEX_UNIT_PX, getFontSizeFromPreferences(requireContext(), sp));
         if (sp.getBoolean(getString(R.string.pref_key_font), false)) {
             binding.singleNoteContent.setTypeface(Typeface.MONOSPACE);
         }
     }
 
     @Override
-    protected void colorWithText(@NonNull String newText, @Nullable Integer current) {
+    protected void colorWithText(@NonNull String newText, @Nullable Integer current, int mainColor, int textColor) {
         if (binding != null && ViewCompat.isAttachedToWindow(binding.singleNoteContent)) {
             binding.singleNoteContent.setText(
-                    searchAndColor(new SpannableString(getContent()), newText, requireContext(), current),
+                    searchAndColor(new SpannableString(getContent()), newText, requireContext(), current, mainColor, textColor),
                     TextView.BufferType.SPANNABLE);
         }
     }
@@ -168,6 +170,7 @@ public class NotePreviewFragment extends SearchableBaseNoteFragment implements O
                 SingleSignOnAccount ssoAccount = SingleAccountHelper.getCurrentSingleSignOnAccount(requireContext());
                 db.getNoteServerSyncHelper().addCallbackPull(ssoAccount, () -> {
                     note = db.getNote(note.getAccountId(), note.getId());
+                    changedText = note.getContent();
                     binding.singleNoteContent.setText(/*markdownProcessor.parse(*/NoteLinksUtils.replaceNoteLinksWithDummyUrls(note.getContent(), db.getRemoteIds(note.getAccountId()))/*)*/);
                     binding.swiperefreshlayout.setRefreshing(false);
                 });
@@ -179,5 +182,11 @@ public class NotePreviewFragment extends SearchableBaseNoteFragment implements O
             binding.swiperefreshlayout.setRefreshing(false);
             Toast.makeText(requireContext(), getString(R.string.error_sync, getString(R.string.error_no_network)), Toast.LENGTH_LONG).show();
         }
+    }
+
+    @Override
+    public void applyBrand(int mainColor, int textColor) {
+        super.applyBrand(mainColor, textColor);
+        binding.singleNoteContent.setHighlightColor(getTextHighlightBackgroundColor(requireContext(), mainColor, colorPrimary, colorAccent));
     }
 }

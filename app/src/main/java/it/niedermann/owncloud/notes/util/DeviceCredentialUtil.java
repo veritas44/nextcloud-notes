@@ -10,7 +10,7 @@ import android.util.Log;
  */
 public class DeviceCredentialUtil {
 
-    private static final String TAG = DeviceCredentialUtil.class.getCanonicalName();
+    private static final String TAG = DeviceCredentialUtil.class.getSimpleName();
 
     private DeviceCredentialUtil() {
         // utility class -> private constructor
@@ -20,12 +20,7 @@ public class DeviceCredentialUtil {
         KeyguardManager keyguardManager = (KeyguardManager) context.getSystemService(Context.KEYGUARD_SERVICE);
 
         if (keyguardManager != null) {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {
-                return keyguardManager.isKeyguardSecure();
-            } else {
-                Log.i(TAG, "No credentials are available on Android " + Build.VERSION.CODENAME);
-                return false;
-            }
+            return keyguardManager.isKeyguardSecure();
         } else {
             Log.e(TAG, "Keyguard manager is null");
             return false;

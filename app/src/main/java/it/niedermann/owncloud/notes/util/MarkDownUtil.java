@@ -9,7 +9,7 @@ import androidx.annotation.NonNull;
 @SuppressWarnings("WeakerAccess")
 public class MarkDownUtil {
 
-    private static final String TAG = MarkDownUtil.class.getCanonicalName();
+    private static final String TAG = MarkDownUtil.class.getSimpleName();
 
     public static final String CHECKBOX_UNCHECKED_MINUS = "- [ ]";
     public static final String CHECKBOX_UNCHECKED_MINUS_TRAILING_SPACE = CHECKBOX_UNCHECKED_MINUS + " ";

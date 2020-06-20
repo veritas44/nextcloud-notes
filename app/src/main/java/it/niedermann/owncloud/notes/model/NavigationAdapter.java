@@ -1,5 +1,6 @@
 package it.niedermann.owncloud.notes.model;
 
+import android.content.Context;
 import android.graphics.Color;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -7,6 +8,7 @@ import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import androidx.annotation.ColorInt;
 import androidx.annotation.DrawableRes;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -17,11 +19,16 @@ import java.util.ArrayList;
 import java.util.List;
 
 import it.niedermann.owncloud.notes.R;
+import it.niedermann.owncloud.notes.branding.BrandingUtil;
 import it.niedermann.owncloud.notes.databinding.ItemNavigationBinding;
 import it.niedermann.owncloud.notes.util.NoteUtil;
 
 public class NavigationAdapter extends RecyclerView.Adapter<NavigationAdapter.ViewHolder> {
 
+    @NonNull
+    private final Context context;
+    @ColorInt
+    private int mainColor;
     @DrawableRes
     public static final int ICON_FOLDER = R.drawable.ic_folder_grey600_24dp;
     @DrawableRes
@@ -34,6 +41,11 @@ public class NavigationAdapter extends RecyclerView.Adapter<NavigationAdapter.Vi
     public static final int ICON_MULTIPLE_OPEN = R.drawable.ic_folder_grey600_24dp;
     @DrawableRes
     public static final int ICON_SUB_MULTIPLE = R.drawable.ic_create_new_folder_grey600_18dp;
+
+    public void applyBrand(int mainColor, int textColor) {
+        this.mainColor = BrandingUtil.getSecondaryForegroundColorDependingOnTheme(context, mainColor);
+        notifyDataSetChanged();
+    }
 
     public static class NavigationItem {
         @NonNull
@@ -50,6 +62,16 @@ public class NavigationAdapter extends RecyclerView.Adapter<NavigationAdapter.Vi
             this.label = label;
             this.count = count;
             this.icon = icon;
+        }
+    }
+
+    public static class CategoryNavigationItem extends NavigationItem {
+        @NonNull
+        public Long categoryId;
+
+        public CategoryNavigationItem(@NonNull String id, @NonNull String label, @Nullable Integer count, @DrawableRes int icon, @NonNull Long categoryId) {
+            super(id, label, count, icon);
+            this.categoryId = categoryId;
         }
     }
 
@@ -77,7 +99,7 @@ public class NavigationAdapter extends RecyclerView.Adapter<NavigationAdapter.Vi
             itemView.setOnClickListener(view -> clickListener.onItemClick(currentItem));
         }
 
-        private void assignItem(@NonNull NavigationItem item) {
+        private void bind(@NonNull NavigationItem item) {
             currentItem = item;
             boolean isSelected = item.id.equals(selectedItem);
             name.setText(NoteUtil.extendCategory(item.label));
@@ -89,12 +111,13 @@ public class NavigationAdapter extends RecyclerView.Adapter<NavigationAdapter.Vi
             } else {
                 icon.setVisibility(View.GONE);
             }
-            view.setBackgroundColor(isSelected ? view.getResources().getColor(R.color.bg_highlighted) : Color.TRANSPARENT);
-            int textColor = view.getResources().getColor(isSelected ? R.color.primary_dark : R.color.fg_default);
+            int textColor = isSelected ? mainColor : view.getResources().getColor(R.color.fg_default);
 
             name.setTextColor(textColor);
             count.setTextColor(textColor);
             icon.setColorFilter(isSelected ? textColor : 0);
+
+            view.setSelected(isSelected);
         }
     }
 
@@ -110,7 +133,9 @@ public class NavigationAdapter extends RecyclerView.Adapter<NavigationAdapter.Vi
     @NonNull
     private final ClickListener clickListener;
 
-    public NavigationAdapter(@NonNull ClickListener clickListener) {
+    public NavigationAdapter(@NonNull Context context, @NonNull ClickListener clickListener) {
+        this.context = context;
+        this.mainColor = BrandingUtil.getSecondaryForegroundColorDependingOnTheme(context, BrandingUtil.readBrandMainColor(context));
         this.clickListener = clickListener;
     }
 
@@ -123,7 +148,7 @@ public class NavigationAdapter extends RecyclerView.Adapter<NavigationAdapter.Vi
 
     @Override
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
-        holder.assignItem(items.get(position));
+        holder.bind(items.get(position));
     }
 
     @Override
