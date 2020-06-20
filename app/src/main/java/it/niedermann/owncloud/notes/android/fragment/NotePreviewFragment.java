@@ -34,14 +34,10 @@ import io.noties.markwon.ext.tasklist.TaskListPlugin;
 import io.noties.markwon.html.HtmlPlugin;
 import io.noties.markwon.image.ImagesPlugin;
 import io.noties.markwon.linkify.LinkifyPlugin;
-import io.noties.markwon.syntax.Prism4jThemeDefault;
-import io.noties.markwon.syntax.SyntaxHighlightPlugin;
-import io.noties.prism4j.Prism4j;
 import it.niedermann.owncloud.notes.R;
 import it.niedermann.owncloud.notes.databinding.FragmentNotePreviewBinding;
 import it.niedermann.owncloud.notes.editor.plugins.InternalLinksPlugin;
 import it.niedermann.owncloud.notes.editor.plugins.ToggleableTaskListPlugin;
-import it.niedermann.owncloud.notes.editor.syntaxhighlighter.GrammarLocatorDef;
 import it.niedermann.owncloud.notes.persistence.NotesDatabase;
 import it.niedermann.owncloud.notes.util.NoteLinksUtils;
 import it.niedermann.owncloud.notes.util.SSOUtil;
@@ -117,7 +113,7 @@ public class NotePreviewFragment extends SearchableBaseNoteFragment implements O
                     markwon.setMarkdown(binding.singleNoteContent, changedText);
                     saveNote(null);
                 }))
-                .usePlugin(SyntaxHighlightPlugin.create(new Prism4j(new GrammarLocatorDef()), Prism4jThemeDefault.create()))
+//                .usePlugin(SyntaxHighlightPlugin.create(new Prism4j(new GrammarLocatorDef()), Prism4jThemeDefault.create()))
                 .usePlugin(new InternalLinksPlugin(db.getRemoteIds(note.getAccountId())))
                 // TODO Internal note links
                 // TODO Try to move this into InternalLinksPlugin

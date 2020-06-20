@@ -14,25 +14,31 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.preference.PreferenceManager;
 
-import com.yydcdut.markdown.MarkdownProcessor;
-import com.yydcdut.markdown.syntax.text.TextFactory;
-
+import io.noties.markwon.Markwon;
+import io.noties.markwon.ext.strikethrough.StrikethroughPlugin;
+import io.noties.markwon.ext.tables.TablePlugin;
+import io.noties.markwon.ext.tasklist.TaskListPlugin;
+import io.noties.markwon.html.HtmlPlugin;
+import io.noties.markwon.image.ImagesPlugin;
+import io.noties.markwon.linkify.LinkifyPlugin;
 import it.niedermann.owncloud.notes.R;
 import it.niedermann.owncloud.notes.branding.BrandedActivity;
 import it.niedermann.owncloud.notes.databinding.ActivityFormattingHelpBinding;
+import it.niedermann.owncloud.notes.editor.plugins.InternalLinksPlugin;
+import it.niedermann.owncloud.notes.editor.plugins.ToggleableTaskListPlugin;
 
 import static it.niedermann.owncloud.notes.util.MarkDownUtil.CHECKBOX_CHECKED_MINUS;
 import static it.niedermann.owncloud.notes.util.MarkDownUtil.CHECKBOX_CHECKED_STAR;
 import static it.niedermann.owncloud.notes.util.MarkDownUtil.CHECKBOX_UNCHECKED_MINUS;
 import static it.niedermann.owncloud.notes.util.MarkDownUtil.CHECKBOX_UNCHECKED_STAR;
-import static it.niedermann.owncloud.notes.util.MarkDownUtil.getMarkDownConfiguration;
-import static it.niedermann.owncloud.notes.util.MarkDownUtil.parseCompat;
 import static it.niedermann.owncloud.notes.util.NoteUtil.getFontSizeFromPreferences;
 
 public class FormattingHelpActivity extends BrandedActivity {
 
     private ActivityFormattingHelpBinding binding;
     private String content;
+
+    private Markwon markwon;
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
@@ -45,57 +51,22 @@ public class FormattingHelpActivity extends BrandedActivity {
 
         content = buildFormattingHelp();
 
-        final MarkdownProcessor markdownProcessor = new MarkdownProcessor(this);
-        markdownProcessor.factory(TextFactory.create());
-        markdownProcessor.config(getMarkDownConfiguration(binding.content.getContext())
-                .setOnTodoClickCallback((view, line, lineNumber) -> {
-                            try {
-                                String[] lines = TextUtils.split(content, "\\r?\\n");
-                                /*
-                                 * Workaround for RxMarkdown-bug:
-                                 * When (un)checking a checkbox in a note which contains code-blocks, the "`"-characters get stripped out in the TextView and therefore the given lineNumber is wrong
-                                 * Find number of lines starting with ``` before lineNumber
-                                 */
-                                boolean inCodefence = false;
-                                for (int i = 0; i < lines.length; i++) {
-                                    if (lines[i].startsWith("```")) {
-                                        inCodefence = !inCodefence;
-                                        lineNumber++;
-                                    }
-                                    if (inCodefence && TextUtils.isEmpty(lines[i])) {
-                                        lineNumber++;
-                                    }
-                                    if (i == lineNumber) {
-                                        break;
-                                    }
-                                }
-
-                                /*
-                                 * Workaround for multiple RxMarkdown-bugs:
-                                 * When (un)checking a checkbox which is in the last line, every time it gets toggled, the last character of the line gets lost.
-                                 * When (un)checking a checkbox, every markdown gets stripped in the given line argument
-                                 */
-                                if (lines[lineNumber].startsWith(CHECKBOX_UNCHECKED_MINUS) || lines[lineNumber].startsWith(CHECKBOX_UNCHECKED_STAR)) {
-                                    lines[lineNumber] = lines[lineNumber].replace(CHECKBOX_UNCHECKED_MINUS, CHECKBOX_CHECKED_MINUS);
-                                    lines[lineNumber] = lines[lineNumber].replace(CHECKBOX_UNCHECKED_STAR, CHECKBOX_CHECKED_STAR);
-                                } else {
-                                    lines[lineNumber] = lines[lineNumber].replace(CHECKBOX_CHECKED_MINUS, CHECKBOX_UNCHECKED_MINUS);
-                                    lines[lineNumber] = lines[lineNumber].replace(CHECKBOX_CHECKED_STAR, CHECKBOX_UNCHECKED_STAR);
-                                }
-
-                                content = TextUtils.join("\n", lines);
-                                binding.content.setText(parseCompat(markdownProcessor, content));
-                            } catch (IndexOutOfBoundsException e) {
-                                Toast.makeText(this, R.string.checkbox_could_not_be_toggled, Toast.LENGTH_SHORT).show();
-                                e.printStackTrace();
-                            }
-                            return line;
-                        }
-                )
-                .setOnLinkClickCallback((view, link) -> startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(link))))
-                .build());
+        markwon = Markwon.builder(this)
+                .usePlugin(StrikethroughPlugin.create())
+                .usePlugin(TablePlugin.create(this))
+                .usePlugin(TaskListPlugin.create(this))
+                .usePlugin(HtmlPlugin.create())
+                .usePlugin(ImagesPlugin.create())
+                .usePlugin(LinkifyPlugin.create())
+                .usePlugin(new ToggleableTaskListPlugin(content, newCompleteContent -> {
+                    content = newCompleteContent;
+                    markwon.setMarkdown(binding.content, content);
+                }))
+//                .usePlugin(SyntaxHighlightPlugin.create(new Prism4j(new GrammarLocatorDef()), Prism4jThemeDefault.create()))
+                .build();
         binding.content.setMovementMethod(LinkMovementMethod.getInstance());
-        binding.content.setText(parseCompat(markdownProcessor, content));
+
+        markwon.setMarkdown(binding.content, content);
 
         SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
         binding.content.setTextSize(TypedValue.COMPLEX_UNIT_PX, getFontSizeFromPreferences(this, sp));

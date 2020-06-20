@@ -41,9 +41,6 @@ import io.noties.markwon.ext.tasklist.TaskListPlugin;
 import io.noties.markwon.html.HtmlPlugin;
 import io.noties.markwon.image.ImagesPlugin;
 import io.noties.markwon.linkify.LinkifyPlugin;
-import io.noties.markwon.syntax.Prism4jThemeDefault;
-import io.noties.markwon.syntax.SyntaxHighlightPlugin;
-import io.noties.prism4j.Prism4j;
 import it.niedermann.owncloud.notes.R;
 import it.niedermann.owncloud.notes.databinding.FragmentNoteEditBinding;
 import it.niedermann.owncloud.notes.editor.handler.BlockQuoteEditHandler;
@@ -53,7 +50,6 @@ import it.niedermann.owncloud.notes.editor.handler.HeadingEditHandler;
 import it.niedermann.owncloud.notes.editor.handler.LinkEditHandler;
 import it.niedermann.owncloud.notes.editor.handler.StrikethroughEditHandler;
 import it.niedermann.owncloud.notes.editor.plugins.InternalLinksPlugin;
-import it.niedermann.owncloud.notes.editor.syntaxhighlighter.GrammarLocatorDef;
 import it.niedermann.owncloud.notes.model.CloudNote;
 import it.niedermann.owncloud.notes.model.ISyncCallback;
 import it.niedermann.owncloud.notes.util.NotesTextWatcher;
@@ -192,7 +188,7 @@ public class NoteEditFragment extends SearchableBaseNoteFragment {
                     .usePlugin(HtmlPlugin.create())
                     .usePlugin(ImagesPlugin.create())
                     .usePlugin(LinkifyPlugin.create())
-                    .usePlugin(SyntaxHighlightPlugin.create(new Prism4j(new GrammarLocatorDef()), Prism4jThemeDefault.create()))
+//                    .usePlugin(SyntaxHighlightPlugin.create(new Prism4j(new GrammarLocatorDef()), Prism4jThemeDefault.create()))
                     .build();
 
 

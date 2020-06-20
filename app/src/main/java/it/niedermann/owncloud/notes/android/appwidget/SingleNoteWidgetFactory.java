@@ -18,8 +18,6 @@ import it.niedermann.owncloud.notes.model.SingleNoteWidgetData;
 import it.niedermann.owncloud.notes.persistence.NotesDatabase;
 import it.niedermann.owncloud.notes.util.Notes;
 
-import static it.niedermann.owncloud.notes.android.appwidget.SingleNoteWidget.DARK_THEME_KEY;
-
 public class SingleNoteWidgetFactory implements RemoteViewsService.RemoteViewsFactory {
 
     //    private final MarkdownProcessor markdownProcessor;
