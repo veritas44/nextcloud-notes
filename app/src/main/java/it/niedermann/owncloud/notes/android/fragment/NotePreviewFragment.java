@@ -108,8 +108,8 @@ public class NotePreviewFragment extends SearchableBaseNoteFragment implements O
                 .usePlugin(HtmlPlugin.create())
                 .usePlugin(ImagesPlugin.create())
                 .usePlugin(LinkifyPlugin.create())
-                .usePlugin(new ToggleableTaskListPlugin(note.getContent(), newCompmleteText -> {
-                    changedText = newCompmleteText;
+                .usePlugin(new ToggleableTaskListPlugin(note.getContent(), newCompletedText -> {
+                    changedText = newCompletedText;
                     markwon.setMarkdown(binding.singleNoteContent, changedText);
                     saveNote(null);
                 }))
@@ -147,9 +147,12 @@ public class NotePreviewFragment extends SearchableBaseNoteFragment implements O
     @Override
     protected void colorWithText(@NonNull String newText, @Nullable Integer current, int mainColor, int textColor) {
         if (binding != null && ViewCompat.isAttachedToWindow(binding.singleNoteContent)) {
-            binding.singleNoteContent.setText(
-                    searchAndColor(new SpannableString(getContent()), newText, requireContext(), current, mainColor, textColor),
-                    TextView.BufferType.SPANNABLE);
+            markwon.setParsedMarkdown(
+                    binding.singleNoteContent,
+                    searchAndColor(
+                            new SpannableString(markwon.render(markwon.parse(getContent())))
+                            , newText, requireContext(), current, mainColor, textColor)
+            );
         }
     }
 
