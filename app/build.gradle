@@ -13,9 +13,13 @@ android {
         applicationId "it.niedermann.owncloud.notes"
         minSdkVersion 17
         targetSdkVersion 29
-        versionCode 2016001
-        versionName "2.16.1"
+        versionCode 2016003
+        versionName "2.16.3"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+    }
+
+    buildFeatures {
+        viewBinding true
     }
 
     buildTypes {
@@ -32,10 +36,6 @@ android {
     lintOptions {
         disable 'MissingTranslation'
         abortOnError false
-    }
-
-    viewBinding {
-        enabled = true
     }
 
     flavorDimensions "version"
@@ -76,13 +76,14 @@ dependencies {
     // Glide
     implementation 'com.github.bumptech.glide:glide:4.11.0'
     annotationProcessor 'com.github.bumptech.glide:compiler:4.11.0'
+    implementation project(path: ':glide-sso-integration')
 
     // Android X
     implementation "androidx.appcompat:appcompat:1.1.0"
     implementation "androidx.fragment:fragment:1.2.5"
     implementation "androidx.preference:preference:1.1.1"
     implementation "androidx.recyclerview:recyclerview:1.1.0"
-    implementation 'androidx.swiperefreshlayout:swiperefreshlayout:1.0.0'
+    implementation 'androidx.swiperefreshlayout:swiperefreshlayout:1.1.0'
     implementation 'androidx.work:work-runtime:2.3.4'
     implementation "com.google.android.material:material:1.1.0"
 
