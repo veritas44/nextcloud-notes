@@ -52,7 +52,6 @@ import it.niedermann.owncloud.notes.editor.handler.StrikethroughEditHandler;
 import it.niedermann.owncloud.notes.editor.plugins.InternalLinksPlugin;
 import it.niedermann.owncloud.notes.shared.model.CloudNote;
 import it.niedermann.owncloud.notes.shared.model.ISyncCallback;
-import it.niedermann.owncloud.notes.shared.util.NotesTextWatcher;
 import it.niedermann.owncloud.notes.edit.format.ContextBasedFormattingCallback;
 import it.niedermann.owncloud.notes.edit.format.ContextBasedRangeFormattingCallback;
 

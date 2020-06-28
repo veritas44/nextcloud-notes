@@ -13,7 +13,7 @@ import java.util.Set;
 import io.noties.markwon.AbstractMarkwonPlugin;
 import io.noties.markwon.SpanFactory;
 import io.noties.markwon.core.CorePlugin;
-import it.niedermann.owncloud.notes.util.NoteLinksUtils;
+import it.niedermann.owncloud.notes.shared.util.NoteLinksUtils;
 
 public class InternalLinksPlugin extends AbstractMarkwonPlugin {
 

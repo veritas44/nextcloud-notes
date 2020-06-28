@@ -16,10 +16,10 @@ import io.noties.markwon.SpanFactory;
 import io.noties.markwon.ext.tasklist.TaskListItem;
 import io.noties.markwon.ext.tasklist.TaskListSpan;
 
-import static it.niedermann.owncloud.notes.util.MarkDownUtil.CHECKBOX_CHECKED_MINUS;
-import static it.niedermann.owncloud.notes.util.MarkDownUtil.CHECKBOX_CHECKED_STAR;
-import static it.niedermann.owncloud.notes.util.MarkDownUtil.CHECKBOX_UNCHECKED_MINUS;
-import static it.niedermann.owncloud.notes.util.MarkDownUtil.CHECKBOX_UNCHECKED_STAR;
+import static it.niedermann.owncloud.notes.shared.util.MarkDownUtil.CHECKBOX_CHECKED_MINUS;
+import static it.niedermann.owncloud.notes.shared.util.MarkDownUtil.CHECKBOX_CHECKED_STAR;
+import static it.niedermann.owncloud.notes.shared.util.MarkDownUtil.CHECKBOX_UNCHECKED_MINUS;
+import static it.niedermann.owncloud.notes.shared.util.MarkDownUtil.CHECKBOX_UNCHECKED_STAR;
 
 public class ToggleableTaskListPlugin extends AbstractMarkwonPlugin {
 
